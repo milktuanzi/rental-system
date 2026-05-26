@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="智能房屋租赁系统 - 提供高效便捷的租房服务">
+    <title>{% block title %}智能房屋租赁系统{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- 自定义CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- 额外CSS -->
+    {% block extra_css %}{% endblock %}
+    
+    <!-- 页面加载动画 -->
+    <style>
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100000;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .page-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        .page-loader .loader-content {
+            text-align: center;
+            color: white;
+        }
+        
+        .page-loader .loader-content h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .page-loader .loader-content .spinner-lg {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        window.addEventListener('load', function() {
+            var loader = document.getElementById('pageLoader');
+            if (loader) {
+                loader.classList.add('hidden');
+                setTimeout(function() {
+                    loader.style.display = 'none';
+                }, 500);
+            }
+        });
+    </script>
+</head>
+<body>
+    <!-- 页面加载动画 -->
+    <div class="page-loader" id="pageLoader">
+        <div class="loader-content">
+            <h2>🏠 智能房屋租赁</h2>
+            <div class="spinner-lg"></div>
+        </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('common.index') }}">
+                <span class="logo-icon">🏠</span>
+                <span>智能房屋租赁</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('common.index') }}">
+                            <span>🏠</span> 首页
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('common.search') }}">
+                            <span>🔍</span> 搜索房源
+                        </a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_landlord() %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('landlord.dashboard') }}">
+                                <span>👤</span> 房东中心
+                            </a>
+                        </li>
+                        {% elif current_user.is_tenant() %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('tenant.dashboard') }}">
+                                <span>🔑</span> 租客中心
+                            </a>
+                        </li>
+                        {% elif current_user.is_admin() %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                                <span>⚙️</span> 管理后台
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <span>👤</span> {{ current_user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                        <span>👤</span> 更改信息
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                        <span>🚪</span> 退出登录
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <span>🔓</span> 登录
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-light text-primary ms-2" href="{{ url_for('auth.register') }}">
+                                <span>📝</span> 注册
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash 消息 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="container mt-3">
+                <div class="alert alert-{{ 'danger' if category == 'danger' else 'warning' if category == 'warning' else 'info' if category == 'info' else 'success' }} alert-dismissible fade show" role="alert">
+                    <div class="d-flex align-items-center">
+                        <span class="me-2">
+                            {% if category == 'success' %}✅{% elif category == 'danger' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+                        </span>
+                        <strong>{{ message }}</strong>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- 主体内容 -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5>🏠 关于我们</h5>
+                    <p class="text-white-80">智能房屋租赁系统致力于为租客和房东提供高效、透明的租赁服务，让租房变得简单便捷。</p>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5>🔗 快速链接</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('common.index') }}">首页</a></li>
+                        <li><a href="{{ url_for('common.search') }}">搜索房源</a></li>
+                        <li><a href="{{ url_for('common.about') }}">关于我们</a></li>
+                        <li><a href="{{ url_for('common.contact') }}">联系我们</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>📞 联系方式</h5>
+                    <ul class="list-unstyled text-white-80">
+                        <li class="mb-2">
+                            <span class="me-2">📧</span>
+                            <a href="mailto:support@rental.com">support@rental.com</a>
+                        </li>
+                        <li class="mb-2">
+                            <span class="me-2">📱</span>
+                            <a href="tel:400-1234-5678">400-1234-5678</a>
+                        </li>
+                        <li>
+                            <span class="me-2">📍</span>
+                            <span>北京市朝阳区建国路88号</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <div class="d-flex justify-content-center align-items-center flex-wrap gap-4 text-white-80">
+                    <span>&copy; 2024 智能房屋租赁系统. 版权所有</span>
+                    <span class="footer-divider">|</span>
+                    <a href="#" class="footer-link">隐私政策</a>
+                    <span class="footer-divider">|</span>
+                    <a href="#" class="footer-link">服务条款</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 自定义JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- 页面加载完成动画 -->
+    <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('pageLoader').classList.add('hidden');
+            }, 500);
+        });
+    </script>
+    
+    <!-- 额外JS -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

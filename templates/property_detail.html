@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}房源详情 - 智能房屋租赁系统{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- 房源主信息 -->
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h1 class="mb-3">{{ property.title }}</h1>
+
+                    <!-- 房源图片轮播 -->
+                    <div id="propertyCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {% if property.images and property.images|length > 0 %}
+                                {% for image in property.images %}
+                                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                    <img src="{{ image }}" class="d-block w-100" alt="房源图片" style="height: 400px; object-fit: cover;">
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                            <div class="carousel-item active">
+                                <img src="{{ url_for('static', filename='images/properties/modern-apartment-exterior.jpg') }}" class="d-block w-100" alt="房源图片" style="height: 400px; object-fit: cover;">
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if (property.images and property.images|length > 1) or (not property.images or property.images|length == 0) %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- 基本信息 -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>房源信息</h5>
+                            <ul class="list-unstyled">
+                                <li><strong>地址:</strong> {{ property.address }}</li>
+                                <li><strong>区域:</strong> {{ property.district }}</li>
+                                <li><strong>户型:</strong> {{ property.get_room_format() }}</li>
+                                <li><strong>面积:</strong> {{ property.area }} m²</li>
+                                <li><strong>楼层:</strong> {{ property.floor }}/{{ property.total_floors }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>房屋详情</h5>
+                            <ul class="list-unstyled">
+                                <li><strong>类型:</strong> {{ property.property_type }}</li>
+                                <li><strong>装修:</strong> {{ property.decoration }}</li>
+                                <li><strong>月租金:</strong> <span class="text-danger">¥{{ property.price }}</span></li>
+                                <li><strong>押金:</strong> ¥{{ property.deposit }}</li>
+                                <li><strong>状态:</strong>
+                                    {% if property.status == 'available' %}
+                                    <span class="badge bg-success">可租赁</span>
+                                    {% elif property.status == 'rented' %}
+                                    <span class="badge bg-warning">已出租</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">维修中</span>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 设施设备 -->
+                    {% if property.facilities %}
+                    <div class="mb-4">
+                        <h5>设施设备</h5>
+                        {% for facility in property.facilities %}
+                        <span class="badge bg-info">{{ facility }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- 房源描述 -->
+                    {% if property.description %}
+                    <div class="mb-4">
+                        <h5>房源描述</h5>
+                        <p>{{ property.description }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧信息栏 -->
+        <div class="col-md-4">
+            <!-- 房东信息 -->
+            {% if landlord %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">房东信息</h5>
+                    <p><strong>姓名:</strong> {{ landlord.username }}</p>
+                    <p><strong>电话:</strong> {{ landlord.phone }}</p>
+                    <p><strong>邮箱:</strong> {{ landlord.email }}</p>
+                    {% if current_user.is_authenticated and current_user.is_tenant() %}
+                    <a href="{{ url_for('tenant.send_message', receiver_id=landlord.id) }}" class="btn btn-primary w-100">联系房东</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 预约/操作 -->
+            {% if current_user.is_authenticated and current_user.is_tenant() and property.is_available() %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">预约看房</h5>
+                    <a href="{{ url_for('tenant.appointment', property_id=property.id) }}" class="btn btn-success w-100">预约看房</a>
+                </div>
+            </div>
+            {% elif not current_user.is_authenticated %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <p class="text-muted">请登录后预约看房或联系房东</p>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary w-100">登录</a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 房源状态 -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">房源状态</h5>
+                    <p>发布时间: {{ property.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p>最后更新: {{ property.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 相关房源 -->
+    {% if related_properties %}
+    <div class="mt-5">
+        <h3>同区域其他房源</h3>
+        <div class="row">
+            {% for prop in related_properties %}
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ prop.title }}</h5>
+                        <p class="card-text">
+                            户型: {{ prop.get_room_format() }} | 面积: {{ prop.area }}m² | ¥{{ prop.price }}/月
+                        </p>
+                        <a href="{{ url_for('common.property_detail', property_id=prop.id) }}" class="btn btn-sm btn-primary">查看</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

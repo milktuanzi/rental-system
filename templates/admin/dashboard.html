@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}管理后台 - 智能房屋租赁系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <h1 class="mb-4">管理后台</h1>
+
+    <!-- 统计卡片 -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">总用户数</h5>
+                    <p class="display-4">{{ total_users }}</p>
+                    <small>房东: {{ total_landlords }} | 租客: {{ total_tenants }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">房源统计</h5>
+                    <p class="display-4">{{ total_properties }}</p>
+                    <a href="{{ url_for('admin.properties') }}" class="text-white">管理房源 →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">活跃租赁</h5>
+                    <p class="display-4">{{ active_leases }}</p>
+                    <a href="{{ url_for('admin.system_reports') }}" class="text-white">查看报表 →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">待处理投诉</h5>
+                    <p class="display-4">{{ pending_complaints }}</p>
+                    <a href="{{ url_for('admin.complaints') }}" class="text-white">处理投诉 →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理菜单 -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">管理功能</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-primary">👥 用户管理</a>
+                    <a href="{{ url_for('admin.properties') }}" class="btn btn-info">🏠 房源管理</a>
+                    <a href="{{ url_for('admin.complaints') }}" class="btn btn-warning">📢 投诉管理</a>
+                    <a href="{{ url_for('admin.repairs') }}" class="btn btn-danger">🔧 维修管理</a>
+                    <a href="{{ url_for('admin.system_reports') }}" class="btn btn-success">📊 系统报表</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系统概览 -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">用户类型分布</h5>
+                </div>
+                <div class="card-body">
+                    <p>房东: {{ total_landlords }}</p>
+                    <p>租客: {{ total_tenants }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">待处理项</h5>
+                </div>
+                <div class="card-body">
+                    <p>待处理投诉: <strong>{{ pending_complaints }}</strong></p>
+                    <a href="{{ url_for('admin.complaints') }}" class="btn btn-sm btn-outline-primary">查看</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

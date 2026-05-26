@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}房源搜索 - 智能房屋租赁系统{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- 搜索表单 -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">高级搜索</h5>
+            <form method="get" action="{{ url_for('common.search') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="keyword" placeholder="关键词" value="{{ request.args.get('keyword', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="district" placeholder="区域" value="{{ request.args.get('district', '') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control" name="min_price" placeholder="最低价格" value="{{ request.args.get('min_price', '') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control" name="max_price" placeholder="最高价格" value="{{ request.args.get('max_price', '') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">搜索</button>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-3">
+                    <div class="col-md-3">
+                        <select class="form-select" name="rooms">
+                            <option value="">户型 - 不限</option>
+                            <option value="1" {% if request.args.get('rooms') == '1' %}selected{% endif %}>1室</option>
+                            <option value="2" {% if request.args.get('rooms') == '2' %}selected{% endif %}>2室</option>
+                            <option value="3" {% if request.args.get('rooms') == '3' %}selected{% endif %}>3室</option>
+                            <option value="4" {% if request.args.get('rooms') == '4' %}selected{% endif %}>4+室</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="decoration">
+                            <option value="">装修 - 不限</option>
+                            <option value="毛坯" {% if request.args.get('decoration') == '毛坯' %}selected{% endif %}>毛坯</option>
+                            <option value="简装" {% if request.args.get('decoration') == '简装' %}selected{% endif %}>简装</option>
+                            <option value="精装" {% if request.args.get('decoration') == '精装' %}selected{% endif %}>精装</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="sort_by">
+                            <option value="newest" {% if request.args.get('sort_by') == 'newest' %}selected{% endif %}>最新</option>
+                            <option value="price_low" {% if request.args.get('sort_by') == 'price_low' %}selected{% endif %}>价格低→高</option>
+                            <option value="price_high" {% if request.args.get('sort_by') == 'price_high' %}selected{% endif %}>价格高→低</option>
+                            <option value="area_large" {% if request.args.get('sort_by') == 'area_large' %}selected{% endif %}>面积大→小</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 房源列表 -->
+    <div class="row">
+        {% if properties.items %}
+            {% for property in properties.items %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm property-card overflow-hidden">
+                    <div class="relative h-48 bg-gradient-to-br from-green-100 to-emerald-100">
+                        {% if property.images and property.images|length > 0 %}
+                        <img src="{{ property.images[0] }}" class="w-full h-full object-cover" alt="{{ property.title }}">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='images/properties/modern-apartment-exterior.jpg') }}" class="w-full h-full object-cover" alt="{{ property.title }}">
+                        {% endif %}
+                        <div class="absolute top-2 right-2">
+                            <span class="badge bg-white/90 text-green-700 px-2 py-1">{{ property.get_room_format() }}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title font-semibold">{{ property.title }}</h5>
+                        <p class="text-gray-500 text-sm mb-2">{{ property.address }}</p>
+                        <p class="text-sm text-gray-400 mb-3">{{ property.decoration }} | {{ property.area }}m²</p>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-2xl font-bold text-green-600">¥{{ property.price }}</span>
+                            {% if property.status == 'available' %}
+                            <span class="badge bg-success">可租</span>
+                            {% elif property.status == 'rented' %}
+                            <span class="badge bg-warning">已租</span>
+                            {% else %}
+                            <span class="badge bg-secondary">维修</span>
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('common.property_detail', property_id=property.id) }}" class="btn btn-primary btn-sm w-100">查看详情</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="col-md-12">
+            <div class="alert alert-info text-center">
+                <p>没有找到符合条件的房源</p>
+                <a href="{{ url_for('common.index') }}" class="btn btn-sm btn-primary">返回首页</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 分页 -->
+    {% if properties.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if properties.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('common.search', page=properties.prev_num, keyword=request.args.get('keyword', ''), district=request.args.get('district', ''), min_price=request.args.get('min_price', ''), max_price=request.args.get('max_price', ''), rooms=request.args.get('rooms', ''), decoration=request.args.get('decoration', ''), sort_by=request.args.get('sort_by', '')) }}">上一页</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in properties.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num == properties.page %}
+                    <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('common.search', page=page_num, keyword=request.args.get('keyword', ''), district=request.args.get('district', ''), min_price=request.args.get('min_price', ''), max_price=request.args.get('max_price', ''), rooms=request.args.get('rooms', ''), decoration=request.args.get('decoration', ''), sort_by=request.args.get('sort_by', '')) }}">{{ page_num }}</a>
+                    </li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {% if properties.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('common.search', page=properties.next_num, keyword=request.args.get('keyword', ''), district=request.args.get('district', ''), min_price=request.args.get('min_price', ''), max_price=request.args.get('max_price', ''), rooms=request.args.get('rooms', ''), decoration=request.args.get('decoration', ''), sort_by=request.args.get('sort_by', '')) }}">下一页</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+

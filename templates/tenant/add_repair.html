@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}维修申请 - 租客中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4">提交维修申请</h2>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label class="form-label">选择房源</label>
+                            <select name="property_id" class="form-select" required>
+                                <option value="">请选择需要维修的房源</option>
+                                {% for lease in active_leases %}
+                                <option value="{{ lease.property_id }}">
+                                    {{ lease.property.title }} ({{ lease.property.address }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {% if form.title.errors %}
+                                {{ form.title(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">{{ form.title.errors[0] }}</div>
+                            {% else %}
+                                {{ form.title(class="form-control") }}
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {% if form.description.errors %}
+                                {{ form.description(class="form-control is-invalid", rows="4") }}
+                            {% else %}
+                                {{ form.description(class="form-control", rows="4") }}
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.priority.label(class="form-label") }}
+                            {{ form.priority(class="form-select") }}
+                        </div>
+
+                        <div class="mt-4">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                            <a href="{{ url_for('tenant.repairs') }}" class="btn btn-secondary btn-lg">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

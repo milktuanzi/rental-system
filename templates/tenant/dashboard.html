@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}租客仪表板 - 智能房屋租赁系统{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">租客仪表板</h1>
+
+    <!-- 统计卡片 -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">活跃租赁</h5>
+                    <p class="display-4">{{ active_leases }}</p>
+                    <a href="{{ url_for('tenant.my_leases') }}" class="text-white">查看租赁 →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">待处理维修</h5>
+                    <p class="display-4">{{ pending_repairs }}</p>
+                    <a href="{{ url_for('tenant.repairs') }}" class="text-white">查看维修 →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">未读消息</h5>
+                    <p class="display-4">{{ unread_messages }}</p>
+                    <a href="{{ url_for('tenant.messages') }}" class="text-white">查看消息 →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">待确认预约</h5>
+                    <p class="display-4">{{ pending_appointments }}</p>
+                    <a href="{{ url_for('tenant.my_appointments') }}" class="text-white">查看预约 →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速操作 -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">快速操作</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('common.search') }}" class="btn btn-primary">🔍 搜索房源</a>
+                    <a href="{{ url_for('tenant.my_appointments') }}" class="btn btn-success">📅 我的预约</a>
+                    <a href="{{ url_for('tenant.repairs') }}" class="btn btn-warning">🔧 提交维修申请</a>
+                    <a href="{{ url_for('tenant.complaints') }}" class="btn btn-danger">📢 提交投诉</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近预约 -->
+    {% if recent_appointments %}
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">我的预约 <span class="badge bg-info">{{ recent_appointments|length }}</span></h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>房源</th>
+                                <th>预约时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in recent_appointments %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('common.property_detail', property_id=appointment.property.id) }}">
+                                        {{ appointment.property.title }}
+                                    </a>
+                                </td>
+                                <td>{{ appointment.preferred_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    {% if appointment.status == 'pending' %}
+                                    <span class="badge bg-warning">待确认</span>
+                                    {% elif appointment.status == 'confirmed' %}
+                                    <span class="badge bg-success">已确认</span>
+                                    {% elif appointment.status == 'cancelled' %}
+                                    <span class="badge bg-danger">已取消</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ appointment.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('tenant.my_appointments') }}" class="btn btn-sm btn-primary">详情</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{{ url_for('tenant.my_appointments') }}" class="btn btn-sm btn-outline-success">查看全部预约</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 最近租赁 -->
+    {% if recent_leases %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">我的租赁</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>房源</th>
+                                <th>房东</th>
+                                <th>租赁期限</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lease in recent_leases %}
+                            <tr>
+                                <td>{{ lease.property.title }}</td>
+                                <td>{{ lease.property.landlord.username }}</td>
+                                <td>{{ lease.start_date.strftime('%Y-%m-%d') }} 至 {{ lease.end_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if lease.status == 'active' %}
+                                    <span class="badge bg-success">活跃</span>
+                                    {% elif lease.status == 'pending' %}
+                                    <span class="badge bg-warning">待签署</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ lease.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('tenant.lease_detail', lease_id=lease.id) }}" class="btn btn-sm btn-primary">详情</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        您还没有任何租赁，<a href="{{ url_for('common.search') }}">去搜索房源</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 实时更新检查 - 每30秒检查一次预约状态变化
+    setInterval(function() {
+        fetch('{{ url_for('tenant.my_appointments') }}')
+            .then(response => response.text())
+            .then(html => {
+                // 检查是否有状态变化（从待确认变为已确认）
+                if (html.includes('badge bg-success">已确认</span>')) {
+                    // 刷新页面显示最新状态
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('检查预约更新失败:', error));
+    }, 30000); // 每30秒检查一次
+</script>
+{% endblock %}
+

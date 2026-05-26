@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}发布新闻{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-6">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient-to-r from-green-600 to-emerald-500 text-white">
+                    <h4 class="mb-0">发布新闻</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('landlord.add_news') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="form-group">
+                            {{ form.title.label(class='form-label') }}
+                            {{ form.title(class='form-control') }}
+                            {% if form.title.errors %}
+                            <div class="text-danger">
+                                {% for error in form.title.errors %}
+                                <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            {{ form.news_type.label(class='form-label') }}
+                            {{ form.news_type(class='form-control') }}
+                            {% if form.news_type.errors %}
+                            <div class="text-danger">
+                                {% for error in form.news_type.errors %}
+                                <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            {{ form.content.label(class='form-label') }}
+                            {{ form.content(class='form-control', rows=6) }}
+                            {% if form.content.errors %}
+                            <div class="text-danger">
+                                {% for error in form.content.errors %}
+                                <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-success btn-lg btn-block">发布新闻</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

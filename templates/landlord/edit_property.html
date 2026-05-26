@@ -1,0 +1,457 @@
+{% extends "base.html" %}
+
+{% block title %}编辑房源 - 房东中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h2 class="mb-4">编辑房源</h2>
+
+            <!-- Flash消息 -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card mb-4">
+                <div class="card-header bg-gradient-to-r from-green-600 to-emerald-500 text-white">
+                    <h5 class="mb-0"><i class="fa fa-image"></i> 房源图片管理</h5>
+                </div>
+                <div class="card-body">
+                    <!-- 图片上传区域 -->
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <i class="fa fa-cloud-upload fa-3x text-muted"></i>
+                            <p class="text-muted mt-2">点击或拖拽图片到此处上传</p>
+                            <p class="text-muted small">支持 JPG、PNG、GIF、WEBP 格式，单张不超过 5MB</p>
+                            <p class="text-muted small">最多上传 3 张图片</p>
+                        </div>
+                        <input type="file" id="imageInput" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden>
+                        <div class="progress-wrapper" id="progressWrapper" style="display: none;">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%;" id="uploadProgress"></div>
+                            </div>
+                            <p class="text-muted small mt-2" id="progressText">上传中...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 错误提示 -->
+                    <div class="alert alert-danger mt-3" id="uploadError" style="display: none;"></div>
+                    
+                    <!-- 图片预览区 -->
+                    <div class="image-preview-container mt-4" id="imagePreviewContainer">
+                        <!-- 已有图片 -->
+                        {% if property.images %}
+                            {% for image_url in property.images %}
+                            <div class="image-preview-item" data-url="{{ image_url }}">
+                                <img src="{{ image_url }}" alt="房源图片">
+                                <button type="button" class="btn btn-danger btn-sm delete-image-btn" onclick="deleteImage('{{ image_url }}')">
+                                    <i class="fa fa-trash"></i> 删除
+                                </button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 已上传图片数量提示 -->
+                    <p class="text-muted small mt-2" id="imageCountText">
+                        已上传 {{ property.images|length if property.images else 0 }} / 3 张图片
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- 基本信息 -->
+                        <h5 class="mb-3">基本信息</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.title.label(class="form-label") }}
+                                {% if form.title.errors %}
+                                    {{ form.title(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">{{ form.title.errors[0] }}</div>
+                                {% else %}
+                                    {{ form.title(class="form-control") }}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.address.label(class="form-label") }}
+                                {% if form.address.errors %}
+                                    {{ form.address(class="form-control is-invalid") }}
+                                {% else %}
+                                    {{ form.address(class="form-control") }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.district.label(class="form-label") }}
+                                {{ form.district(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.property_type.label(class="form-label") }}
+                                {{ form.property_type(class="form-select") }}
+                            </div>
+                        </div>
+
+                        <!-- 房源详情 -->
+                        <h5 class="mb-3 mt-4">房源详情</h5>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                {{ form.rooms.label(class="form-label") }}
+                                {{ form.rooms(class="form-control") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.halls.label(class="form-label") }}
+                                {{ form.halls(class="form-control") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.bathrooms.label(class="form-label") }}
+                                {{ form.bathrooms(class="form-control") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.area.label(class="form-label") }}
+                                {{ form.area(class="form-control") }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                {{ form.floor.label(class="form-label") }}
+                                {{ form.floor(class="form-control") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.total_floors.label(class="form-label") }}
+                                {{ form.total_floors(class="form-control") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.decoration.label(class="form-label") }}
+                                {{ form.decoration(class="form-select") }}
+                            </div>
+                        </div>
+
+                        <!-- 价格和押金 -->
+                        <h5 class="mb-3 mt-4">价格信息</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.price.label(class="form-label") }}
+                                {{ form.price(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.deposit.label(class="form-label") }}
+                                {{ form.deposit(class="form-control") }}
+                            </div>
+                        </div>
+
+                        <!-- 描述 -->
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows="4") }}
+                        </div>
+
+                        <!-- 设施 -->
+                        <div class="mb-3">
+                            {{ form.facilities.label(class="form-label") }}
+                            <div>
+                                {% for choice in form.facilities %}
+                                <div class="form-check form-check-inline">
+                                    {{ choice }}
+                                    {{ choice.label(class="form-check-label") }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- 状态 -->
+                        <div class="mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
+
+                        <!-- 提交按钮 -->
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">💾 保存修改</button>
+                            <a href="{{ url_for('landlord.properties') }}" class="btn btn-secondary btn-lg">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 图片上传样式 -->
+<style>
+    .image-upload-area {
+        border: 2px dashed #ced4da;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .image-upload-area:hover,
+    .image-upload-area.dragover {
+        border-color: #10b981;
+        background: #e8f5e9;
+    }
+    
+    .image-upload-area.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .upload-placeholder {
+        pointer-events: none;
+    }
+    
+    .image-preview-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .image-preview-item {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .image-preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .image-preview-item .delete-image-btn {
+        position: absolute;
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .image-preview-item:hover .delete-image-btn {
+        opacity: 1;
+    }
+    
+    .progress-wrapper {
+        margin-top: 15px;
+    }
+    
+    @media (max-width: 575.98px) {
+        .image-preview-item {
+            width: 120px;
+            height: 120px;
+        }
+    }
+</style>
+
+<!-- 图片上传脚本 -->
+<script>
+    const propertyId = {{ property.id }};
+    const maxImages = 3;
+    let uploadedImages = {{ property.images|tojson if property.images else '[]'|safe }};
+    
+    const uploadArea = document.getElementById('imageUploadArea');
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+    const imageInput = document.getElementById('imageInput');
+    const progressWrapper = document.getElementById('progressWrapper');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressText = document.getElementById('progressText');
+    const uploadError = document.getElementById('uploadError');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const imageCountText = document.getElementById('imageCountText');
+    
+    // 更新图片数量显示
+    function updateImageCount() {
+        imageCountText.textContent = `已上传 ${uploadedImages.length} / ${maxImages} 张图片`;
+        if (uploadedImages.length >= maxImages) {
+            uploadArea.classList.add('disabled');
+            uploadPlaceholder.innerHTML = '<i class="fa fa-check-circle fa-3x text-success"></i><p class="text-success mt-2">已达到最大图片数量</p>';
+        } else {
+            uploadArea.classList.remove('disabled');
+            uploadPlaceholder.innerHTML = `
+                <i class="fa fa-cloud-upload fa-3x text-muted"></i>
+                <p class="text-muted mt-2">点击或拖拽图片到此处上传</p>
+                <p class="text-muted small">支持 JPG、PNG、GIF、WEBP 格式，单张不超过 5MB</p>
+                <p class="text-muted small">最多上传 ${maxImages} 张图片</p>
+            `;
+        }
+    }
+    
+    // 显示错误
+    function showError(message) {
+        uploadError.textContent = message;
+        uploadError.style.display = 'block';
+        setTimeout(() => {
+            uploadError.style.display = 'none';
+        }, 5000);
+    }
+    
+    // 上传图片
+    function uploadImage(file) {
+        if (uploadedImages.length >= maxImages) {
+            showError('已达到最大图片数量（3张）');
+            return;
+        }
+        
+        // 验证文件类型
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showError('不支持的文件格式，请上传 JPG、PNG、GIF 或 WEBP 格式');
+            return;
+        }
+        
+        // 验证文件大小（5MB）
+        if (file.size > 5 * 1024 * 1024) {
+            showError('文件大小超过5MB限制');
+            return;
+        }
+        
+        // 显示进度
+        progressWrapper.style.display = 'block';
+        uploadPlaceholder.style.display = 'none';
+        uploadProgress.style.width = '0%';
+        progressText.textContent = '上传中... 0%';
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                uploadProgress.style.width = percent + '%';
+                progressText.textContent = `上传中... ${percent}%`;
+            }
+        });
+        
+        xhr.addEventListener('load', () => {
+            progressWrapper.style.display = 'none';
+            uploadPlaceholder.style.display = 'block';
+            
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                if (response.success) {
+                    uploadedImages.push(response.url);
+                    addImagePreview(response.url);
+                    updateImageCount();
+                } else {
+                    showError(response.error || '上传失败');
+                }
+            } else {
+                showError('上传失败，请重试');
+            }
+        });
+        
+        xhr.addEventListener('error', () => {
+            progressWrapper.style.display = 'none';
+            uploadPlaceholder.style.display = 'block';
+            showError('网络错误，请检查网络连接');
+        });
+        
+        xhr.open('POST', `/landlord/api/property/${propertyId}/upload-image`);
+        xhr.send(formData);
+    }
+    
+    // 添加图片预览
+    function addImagePreview(url) {
+        const item = document.createElement('div');
+        item.className = 'image-preview-item';
+        item.dataset.url = url;
+        item.innerHTML = `
+            <img src="${url}" alt="房源图片">
+            <button type="button" class="btn btn-danger btn-sm delete-image-btn" onclick="deleteImage('${url}')">
+                <i class="fa fa-trash"></i> 删除
+            </button>
+        `;
+        imagePreviewContainer.appendChild(item);
+    }
+    
+    // 删除图片
+    function deleteImage(url) {
+        if (!confirm('确定要删除这张图片吗？')) return;
+        
+        fetch(`/landlord/api/property/${propertyId}/delete-image`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url: url })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                uploadedImages = uploadedImages.filter(img => img !== url);
+                const item = document.querySelector(`.image-preview-item[data-url="${url}"]`);
+                if (item) item.remove();
+                updateImageCount();
+            } else {
+                showError(data.error || '删除失败');
+            }
+        })
+        .catch(() => {
+            showError('删除失败，请重试');
+        });
+    }
+    
+    // 点击上传区域
+    uploadArea.addEventListener('click', () => {
+        if (!uploadArea.classList.contains('disabled')) {
+            imageInput.click();
+        }
+    });
+    
+    // 文件选择
+    imageInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        files.forEach(file => uploadImage(file));
+        imageInput.value = '';
+    });
+    
+    // 拖拽上传
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (!uploadArea.classList.contains('disabled')) {
+            uploadArea.classList.add('dragover');
+        }
+    });
+    
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        if (uploadArea.classList.contains('disabled')) return;
+        
+        const files = Array.from(e.dataTransfer.files);
+        files.forEach(file => uploadImage(file));
+    });
+    
+    // 初始化
+    updateImageCount();
+</script>
+{% endblock %}

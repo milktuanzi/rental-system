@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}预约管理 - 房东中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">预约管理</h2>
+
+    <!-- 筛选按钮 -->
+    <div class="mb-3">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('landlord.appointments') }}" class="btn btn-secondary {{ 'active' if not status else '' }}">全部</a>
+            <a href="{{ url_for('landlord.appointments', status='pending') }}" class="btn btn-secondary {{ 'active' if status == 'pending' else '' }}">待确认</a>
+            <a href="{{ url_for('landlord.appointments', status='confirmed') }}" class="btn btn-secondary {{ 'active' if status == 'confirmed' else '' }}">已确认</a>
+            <a href="{{ url_for('landlord.appointments', status='cancelled') }}" class="btn btn-secondary {{ 'active' if status == 'cancelled' else '' }}">已取消</a>
+        </div>
+    </div>
+
+    {% if appointments.items %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>房源</th>
+                            <th>租客</th>
+                            <th>预约时间</th>
+                            <th>状态</th>
+                            <th>提交时间</th>
+                            <th>备注</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments.items %}
+                        <tr class="{{ 'table-primary' if appointment.status == 'confirmed' and appointment.created_at > (datetime.utcnow() - timedelta(hours=1)) else '' }}">
+                            <td>{{ appointment.property.title }}</td>
+                            <td>{{ appointment.tenant.username }}</td>
+                            <td>{{ appointment.preferred_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% if appointment.status == 'pending' %}
+                                <span class="badge bg-warning">待确认</span>
+                                {% elif appointment.status == 'confirmed' %}
+                                <span class="badge bg-success">已确认</span>
+                                {% elif appointment.status == 'cancelled' %}
+                                <span class="badge bg-danger">已取消</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ appointment.status }}</span>
+                                {% endif %}
+                                {% if appointment.status == 'confirmed' and appointment.created_at > (datetime.utcnow() - timedelta(hours=1)) %}
+                                <span class="badge bg-primary ms-1">NEW</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ appointment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ appointment.message[:20] }}{% if appointment.message|length > 20 %}...{% endif %}</td>
+                            <td>
+                                {% if appointment.status == 'pending' %}
+                                <form method="POST" action="{{ url_for('landlord.confirm_appointment', appointment_id=appointment.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('确认此预约？')">确认</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('landlord.cancel_appointment', appointment_id=appointment.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('取消此预约？')">取消</button>
+                                </form>
+                                {% else %}
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#detailModal{{ appointment.id }}">详情</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            {% if appointments.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if appointments.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('landlord.appointments', page=appointments.prev_num, status=status) }}">上一页</a>
+                    </li>
+                    {% endif %}
+                    {% for page_num in appointments.iter_pages() %}
+                    {% if page_num %}
+                    <li class="page-item {{ 'active' if page_num == appointments.page else '' }}">
+                        <a class="page-link" href="{{ url_for('landlord.appointments', page=page_num, status=status) }}">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if appointments.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('landlord.appointments', page=appointments.next_num, status=status) }}">下一页</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    {% for appointment in appointments.items %}
+    <div class="modal fade" id="detailModal{{ appointment.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">预约详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <strong>房源：</strong> {{ appointment.property.title }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>租客：</strong> {{ appointment.tenant.username }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>预约时间：</strong> {{ appointment.preferred_time.strftime('%Y-%m-%d %H:%M') }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>状态：</strong> 
+                        {% if appointment.status == 'pending' %}待确认{% elif appointment.status == 'confirmed' %}已确认{% elif appointment.status == 'cancelled' %}已取消{% else %}{{ appointment.status }}{% endif %}
+                    </div>
+                    {% if appointment.message %}
+                    <div class="mb-3">
+                        <strong>备注：</strong> {{ appointment.message }}
+                    </div>
+                    {% endif %}
+                    <div class="text-muted">
+                        <small>提交时间：{{ appointment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <i class="fa fa-calendar-o fa-3x mb-3 text-muted"></i>
+        <h5>暂无预约记录</h5>
+        <p>还没有收到任何预约申请</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 实时更新检查
+    setInterval(function() {
+        fetch('{{ url_for('landlord.appointments') }}')
+            .then(response => response.text())
+            .then(html => {
+                // 检查是否有新的已确认预约
+                if (html.includes('badge bg-primary ms-1">NEW</span>')) {
+                    // 有新预约，刷新页面
+                    location.reload();
+                }
+            });
+    }, 30000); // 每30秒检查一次
+</script>
+{% endblock %}

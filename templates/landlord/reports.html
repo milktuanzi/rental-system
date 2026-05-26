@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}报表统计{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-6">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient-to-r from-green-600 to-emerald-500 text-white">
+                    <h4 class="mb-0">报表统计</h4>
+                </div>
+                <div class="card-body">
+                    <!-- 统计卡片 -->
+                    <div class="row mb-6">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <div class="text-3xl font-bold">{{ total_properties }}</div>
+                                    <div class="text-white/80">总房源数</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <div class="text-3xl font-bold">{{ available_properties }}</div>
+                                    <div class="text-white/80">空置房源</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <div class="text-3xl font-bold">{{ rented_properties }}</div>
+                                    <div class="text-white/80">已出租</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <div class="text-3xl font-bold">{{ occupancy_rate|round(1) }}%</div>
+                                    <div class="text-white/80">入住率</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 月收入统计 -->
+                    <div class="card mb-6">
+                        <div class="card-header">
+                            <h5 class="text-gray-700">月租金收入</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center py-8">
+                                <div class="text-5xl font-bold text-green-600">¥{{ total_income|round(2) }}</div>
+                                <div class="text-gray-500 mt-2">当前活跃租赁合同月租金总额</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 租赁合同列表 -->
+                    {% if active_leases %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="text-gray-700">活跃租赁合同</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>房源地址</th>
+                                            <th>租客</th>
+                                            <th>月租金</th>
+                                            <th>开始日期</th>
+                                            <th>结束日期</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for lease in active_leases %}
+                                        <tr>
+                                            <td>{{ lease.property.address }}</td>
+                                            <td>{{ lease.tenant.username }}</td>
+                                            <td>¥{{ lease.monthly_rent }}</td>
+                                            <td>{{ lease.start_date.strftime('%Y-%m-%d') }}</td>
+                                            <td>{{ lease.end_date.strftime('%Y-%m-%d') }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="card">
+                        <div class="card-body text-center py-8">
+                            <i class="fa fa-bar-chart text-gray-400" style="font-size: 4rem;"></i>
+                            <p class="text-gray-500 mt-3">暂无活跃租赁合同</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

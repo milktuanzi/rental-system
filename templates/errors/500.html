@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}500 - 服务器错误{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <h1 class="display-1">500</h1>
+            <h2>服务器错误</h2>
+            <p class="lead mb-4">抱歉，服务器出现了问题。请稍后重试。</p>
+            <a href="{{ url_for('common.index') }}" class="btn btn-primary">返回首页</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

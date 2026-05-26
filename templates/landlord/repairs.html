@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}维修申请管理 - 房东中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">维修申请管理</h2>
+
+    {% if repairs.items %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>房源</th>
+                            <th>标题</th>
+                            <th>租客</th>
+                            <th>优先级</th>
+                            <th>状态</th>
+                            <th>提交时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for repair in repairs.items %}
+                        <tr>
+                            <td>{{ repair.property.title }}</td>
+                            <td>{{ repair.title }}</td>
+                            <td>{{ repair.tenant.username }}</td>
+                            <td>
+                                {% if repair.priority == 'urgent' %}
+                                <span class="badge bg-danger">紧急</span>
+                                {% elif repair.priority == 'high' %}
+                                <span class="badge bg-warning">高</span>
+                                {% elif repair.priority == 'normal' %}
+                                <span class="badge bg-info">普通</span>
+                                {% else %}
+                                <span class="badge bg-secondary">低</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if repair.status == 'pending' %}
+                                <span class="badge bg-warning">待处理</span>
+                                {% elif repair.status == 'in_progress' %}
+                                <span class="badge bg-info">处理中</span>
+                                {% elif repair.status == 'completed' %}
+                                <span class="badge bg-success">已完成</span>
+                                {% else %}
+                                <span class="badge bg-danger">已拒绝</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ repair.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#replyModal{{ repair.id }}">
+                                    回复
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            {% if repairs.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if repairs.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('landlord.repairs', page=repairs.prev_num) }}">上一页</a>
+                    </li>
+                    {% endif %}
+                    {% for page_num in repairs.iter_pages() %}
+                    {% if page_num %}
+                    <li class="page-item {{ 'active' if page_num == repairs.page else '' }}">
+                        <a class="page-link" href="{{ url_for('landlord.repairs', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if repairs.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('landlord.repairs', page=repairs.next_num) }}">下一页</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 回复模态框 -->
+    {% for repair in repairs.items %}
+    <div class="modal fade" id="replyModal{{ repair.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('landlord.reply_repair', repair_id=repair.id) }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title">回复维修申请</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">房源</label>
+                            <p class="form-control-plaintext">{{ repair.property.title }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">问题描述</label>
+                            <p class="form-control-plaintext">{{ repair.description }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">回复内容</label>
+                            <textarea name="reply" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">处理状态</label>
+                            <select name="status" class="form-select">
+                                <option value="pending">待处理</option>
+                                <option value="in_progress">处理中</option>
+                                <option value="completed">已完成</option>
+                                <option value="rejected">拒绝</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">提交回复</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <i class="fa fa-wrench fa-3x mb-3 text-muted"></i>
+        <h5>暂无维修申请</h5>
+        <p>还没有收到任何维修申请</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test CSRF Token</title>
+</head>
+<body>
+    <h1>CSRF Token Test</h1>
+    <form id="testForm">
+        <input type="hidden" name="csrf_token" id="csrfToken" value="{{ csrf_token() }}">
+        <input type="text" name="test" value="test">
+        <button type="submit">Submit</button>
+    </form>
+    <script>
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Form submitted via JavaScript');
+            console.log('CSRF Token:', document.getElementById('csrfToken').value);
+        });
+    </script>
+</body>
+</html>

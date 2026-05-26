@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}关于我们 - 智能房屋租赁系统{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">关于我们</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">项目简介</h3>
+                    <p>智能房屋租赁系统是一个基于Flask框架的现代化房屋租赁管理平台，致力于为房东和租客提供高效、便捷的租赁服务。</p>
+
+                    <h4 class="mt-4">我们的使命</h4>
+                    <p>通过信息技术手段，简化传统房屋租赁流程，降低交易成本，提高市场透明度，让房源信息更加公开透明，让房东和租客之间的沟通更加便捷。</p>
+
+                    <h4 class="mt-4">核心功能</h4>
+                    <ul>
+                        <li>房源发布与管理</li>
+                        <li>智能搜索与推荐</li>
+                        <li>在线预约与看房</li>
+                        <li>电子合同签署</li>
+                        <li>租赁合同管理</li>
+                        <li>消息沟通平台</li>
+                        <li>维修与投诉处理</li>
+                        <li>数据统计分析</li>
+                    </ul>
+
+                    <h4 class="mt-4">主要优势</h4>
+                    <ul>
+                        <li>✅ <strong>高效便捷</strong>: 足不出户即可浏览房源、预约看房</li>
+                        <li>✅ <strong>信息透明</strong>: 真实房源信息、清晰的房东评价</li>
+                        <li>✅ <strong>安全保障</strong>: 严格的身份验证、数据加密保护</li>
+                        <li>✅ <strong>全方位服务</strong>: 从看房到签合同的全流程支持</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">系统统计</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>技术栈:</strong><br>Python • Flask • MySQL</p>
+                    <p><strong>版本:</strong><br>1.0.0</p>
+                    <p><strong>更新时间:</strong><br>2024年12月</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">快速链接</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('common.index') }}">首页</a></li>
+                        <li><a href="{{ url_for('common.search') }}">搜索房源</a></li>
+                        <li><a href="{{ url_for('common.contact') }}">联系我们</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

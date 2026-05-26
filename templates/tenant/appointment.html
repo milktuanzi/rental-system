@@ -1,0 +1,688 @@
+{% extends "base.html" %}
+
+{% block title %}预约看房 - 租客中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="card-title mb-4"><i class="fa fa-calendar-plus-o text-primary"></i> 预约看房</h3>
+
+                    <!-- 房源信息卡片 -->
+                    <div class="card bg-light mb-4 border-0">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h5 class="card-title">{{ property.title }}</h5>
+                                    <p class="text-muted mb-1">
+                                        <i class="fa fa-map-marker"></i> {{ property.address }}
+                                    </p>
+                                    <p class="mb-0">
+                                        <span class="badge bg-secondary me-1">{{ property.get_room_format() }}</span>
+                                        <span class="badge bg-info me-1">{{ property.area }}㎡</span>
+                                        <span class="badge bg-success">¥{{ property.price }}/月</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <img src="{{ property.images[0] if property.images else '/static/img/placeholder.jpg' }}"
+                                         class="rounded" style="max-height: 100px;" alt="房源图片">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" id="appointmentForm" action="{{ url_for('tenant.appointment', property_id=property.id) }}">
+                        {{ form.hidden_tag() }}
+
+                        <!-- 时间选择区域 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fa fa-clock-o"></i> 选择看房时间
+                            </label>
+
+                            <!-- 步骤指示器 -->
+                            <div class="steps-indicator mb-4">
+                                <div class="step-item active" id="step1">
+                                    <span class="step-number">1</span>
+                                    <span class="step-text">选择日期</span>
+                                </div>
+                                <div class="step-line"></div>
+                                <div class="step-item" id="step2">
+                                    <span class="step-number">2</span>
+                                    <span class="step-text">选择时段</span>
+                                </div>
+                                <div class="step-line"></div>
+                                <div class="step-item" id="step3">
+                                    <span class="step-number">3</span>
+                                    <span class="step-text">确认预约</span>
+                                </div>
+                            </div>
+
+                            <!-- 日期选择器 -->
+                            <div class="date-time-picker" id="dateTimePicker">
+                                <!-- 日历 -->
+                                <div class="calendar-container" id="calendarContainer">
+                                    <div class="calendar-header">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="prevMonth">
+                                            <i class="fa fa-chevron-left"></i>
+                                        </button>
+                                        <h5 class="mb-0" id="calendarTitle">2024年6月</h5>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="nextMonth">
+                                            <i class="fa fa-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                    <div class="calendar-weekdays">
+                                        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                                    </div>
+                                    <div class="calendar-days" id="calendarDays">
+                                        <!-- 由JS动态生成 -->
+                                    </div>
+                                </div>
+
+                                <!-- 时段选择 -->
+                                <div class="time-slots-container" id="timeSlotsContainer" style="display: none;">
+                                    <div class="selected-date-display mb-3" id="selectedDateDisplay">
+                                        <i class="fa fa-calendar"></i> 已选日期：<span id="selectedDateText"></span>
+                                    </div>
+                                    <div class="time-slots" id="timeSlots">
+                                        <!-- 上午时段 -->
+                                        <div class="time-period">
+                                            <h6 class="text-muted"><i class="fa fa-sun-o"></i> 上午</h6>
+                                            <div class="slot-buttons">
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="09:00">09:00</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="09:30">09:30</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="10:00">10:00</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="10:30">10:30</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="11:00">11:00</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="11:30">11:30</button>
+                                            </div>
+                                        </div>
+                                        <!-- 下午时段 -->
+                                        <div class="time-period">
+                                            <h6 class="text-muted"><i class="fa fa-cloud-sun"></i> 下午</h6>
+                                            <div class="slot-buttons">
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="14:00">14:00</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="14:30">14:30</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="15:00">15:00</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="15:30">15:30</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="16:00">16:00</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="16:30">16:30</button>
+                                            </div>
+                                        </div>
+                                        <!-- 晚上时段 -->
+                                        <div class="time-period">
+                                            <h6 class="text-muted"><i class="fa fa-moon-o"></i> 晚上</h6>
+                                            <div class="slot-buttons">
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="18:00">18:00</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="18:30">18:30</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="19:00">19:00</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="19:30">19:30</button>
+                                                <button type="button" class="btn btn-outline-primary time-slot" data-time="20:00">20:00</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-link text-muted mt-3" id="backToCalendar">
+                                        <i class="fa fa-arrow-left"></i> 返回日期选择
+                                    </button>
+                                </div>
+
+                                <!-- 预约确认 -->
+                                <div class="confirmation-container" id="confirmationContainer" style="display: none;">
+                                    <div class="selected-datetime-display mb-4">
+                                        <div class="card bg-primary text-white">
+                                            <div class="card-body text-center py-4">
+                                                <i class="fa fa-calendar-check-o fa-3x mb-3"></i>
+                                                <h4 id="confirmedDateTime">2024年6月15日 14:00</h4>
+                                                <p class="mb-0 opacity-75">确认预约此时间看房</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-link text-muted" id="backToSlots">
+                                        <i class="fa fa-arrow-left"></i> 重新选择时间
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 隐藏的时间字段 -->
+                            <input type="hidden" name="preferred_time" id="preferredTime" required>
+                            <div class="invalid-feedback" id="timeError" style="display: none;">
+                                请选择看房时间
+                            </div>
+                        </div>
+
+                        <!-- 留言 -->
+                        <div class="mb-4">
+                            <label for="message" class="form-label fw-bold">
+                                <i class="fa fa-comment-o"></i> 留言给房东 <span class="text-muted fw-normal">(选填)</span>
+                            </label>
+                            <textarea class="form-control" id="message" name="message" rows="3"
+                                      placeholder="您可以询问装修情况、家电配置、周边设施等问题...">{{ form.message.data if form.message.data else '' }}</textarea>
+                            <div class="form-text">留言将同步发送给房东，帮助房东更好地准备看房</div>
+                        </div>
+
+                        <!-- 提交按钮 -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('common.property_detail', property_id=property.id) }}"
+                               class="btn btn-secondary me-md-2">
+                                <i class="fa fa-arrow-left"></i> 返回
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
+                                <i class="fa fa-check"></i> 确认预约
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast 容器 -->
+<div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
+
+<style>
+    /* 步骤指示器 */
+    .steps-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+
+    .step-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 80px;
+    }
+
+    .step-number {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .step-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+        transition: all 0.3s ease;
+    }
+
+    .step-item.active .step-number {
+        background: #0d6efd;
+        color: white;
+    }
+
+    .step-item.active .step-text {
+        color: #0d6efd;
+        font-weight: 500;
+    }
+
+    .step-item.completed .step-number {
+        background: #198754;
+        color: white;
+    }
+
+    .step-item.completed .step-text {
+        color: #198754;
+    }
+
+    .step-line {
+        width: 60px;
+        height: 2px;
+        background: #e9ecef;
+        margin: 0 0.5rem;
+        margin-bottom: 1.5rem;
+        transition: background 0.3s ease;
+    }
+
+    .step-line.active {
+        background: #0d6efd;
+    }
+
+    /* 日历样式 */
+    .calendar-container {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .calendar-header h5 {
+        font-weight: 600;
+        color: #212529;
+    }
+
+    .calendar-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .calendar-weekdays span {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+    }
+
+    .calendar-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+
+    .calendar-day:hover:not(.disabled):not(.empty) {
+        background: #e7f5ff;
+        border-color: #74c0fc;
+    }
+
+    .calendar-day.today {
+        border-color: #339af0;
+        font-weight: bold;
+    }
+
+    .calendar-day.selected {
+        background: #228be6 !important;
+        color: white !important;
+        border-color: #228be6 !important;
+    }
+
+    .calendar-day.disabled {
+        color: #adb5bd;
+        cursor: not-allowed;
+    }
+
+    .calendar-day.empty {
+        cursor: default;
+    }
+
+    .calendar-day.has-appointment {
+        position: relative;
+    }
+
+    .calendar-day.has-appointment::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        width: 4px;
+        height: 4px;
+        background: #fab005;
+        border-radius: 50%;
+    }
+
+    /* 时段选择器样式 */
+    .time-slots-container {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .selected-date-display {
+        text-align: center;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        font-size: 1.1rem;
+    }
+
+    .time-period {
+        margin-bottom: 1.5rem;
+    }
+
+    .time-period h6 {
+        margin-bottom: 0.75rem;
+        font-weight: 500;
+    }
+
+    .slot-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .time-slot {
+        min-width: 70px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .time-slot:hover:not(.disabled):not(.booked) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .time-slot.selected {
+        background: #228be6 !important;
+        border-color: #228be6 !important;
+        color: white !important;
+    }
+
+    .time-slot.disabled {
+        background: #e9ecef;
+        border-color: #dee2e6;
+        color: #adb5bd;
+        cursor: not-allowed;
+        text-decoration: line-through;
+    }
+
+    .time-slot.booked {
+        background: #ffc9c9;
+        border-color: #ffa8a8;
+        color: #c92a2a;
+        cursor: not-allowed;
+    }
+
+    /* 确认样式 */
+    .confirmation-container {
+        text-align: center;
+        padding: 1rem;
+    }
+
+    /* 响应式 */
+    @media (max-width: 576px) {
+        .calendar-container {
+            padding: 1rem;
+        }
+
+        .steps-indicator {
+            transform: scale(0.85);
+        }
+
+        .step-line {
+            width: 30px;
+        }
+
+        .time-slot {
+            min-width: 60px;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const propertyId = {{ property.id }};
+    let currentDate = new Date();
+    let selectedDate = null;
+    let selectedTime = null;
+
+    // DOM元素
+    const calendarTitle = document.getElementById('calendarTitle');
+    const calendarDays = document.getElementById('calendarDays');
+    const prevMonthBtn = document.getElementById('prevMonth');
+    const nextMonthBtn = document.getElementById('nextMonth');
+    const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+    const calendarContainer = document.getElementById('calendarContainer');
+    const confirmationContainer = document.getElementById('confirmationContainer');
+    const selectedDateText = document.getElementById('selectedDateText');
+    const confirmedDateTime = document.getElementById('confirmedDateTime');
+    const preferredTimeInput = document.getElementById('preferredTime');
+    const submitBtn = document.getElementById('submitBtn');
+    const backToCalendarBtn = document.getElementById('backToCalendar');
+    const backToSlotsBtn = document.getElementById('backToSlots');
+    const timeSlots = document.querySelectorAll('.time-slot');
+
+    // 步骤指示器
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+    const stepLines = document.querySelectorAll('.step-line');
+
+    // 初始化日历
+    function initCalendar() {
+        renderCalendar();
+        updateStepIndicator(1);
+    }
+
+    // 渲染日历
+    function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        calendarTitle.textContent = `${year}年${month + 1}月`;
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+
+        calendarDays.innerHTML = '';
+
+        // 添加空白天
+        for (let i = 0; i < firstDay; i++) {
+            const emptyDay = document.createElement('div');
+            emptyDay.className = 'calendar-day empty';
+            calendarDays.appendChild(emptyDay);
+        }
+
+        // 添加日期
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateObj = new Date(year, month, day);
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+            dayEl.textContent = day;
+
+            // 今天标记
+            if (dateObj.toDateString() === today.toDateString()) {
+                dayEl.classList.add('today');
+            }
+
+            // 过去日期禁用
+            if (dateObj < today && dateObj.toDateString() !== today.toDateString()) {
+                dayEl.classList.add('disabled');
+            } else {
+                // 检查是否有预约
+                checkAppointmentStatus(year, month + 1, day, dayEl);
+                dayEl.addEventListener('click', () => selectDate(dateObj, dayEl));
+            }
+
+            calendarDays.appendChild(dayEl);
+        }
+    }
+
+    // 检查某天是否有预约
+    function checkAppointmentStatus(year, month, day, dayEl) {
+        // 这里可以调用API获取已预约的日期
+        // 暂时用日期判断，周末不可预约作为示例
+        const date = new Date(year, month - 1, day);
+        if (date.getDay() === 0) { // 周日
+            dayEl.classList.add('disabled');
+        }
+    }
+
+    // 选择日期
+    function selectDate(dateObj, dayEl) {
+        if (dayEl.classList.contains('disabled')) return;
+
+        // 移除之前的选中
+        document.querySelectorAll('.calendar-day.selected').forEach(el => {
+            el.classList.remove('selected');
+        });
+
+        dayEl.classList.add('selected');
+        selectedDate = dateObj;
+
+        // 更新显示
+        const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+        selectedDateText.textContent = `${dateObj.getFullYear()}年${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
+
+        // 切换到时段选择
+        calendarContainer.style.display = 'none';
+        timeSlotsContainer.style.display = 'block';
+        updateStepIndicator(2);
+
+        // 加载该日期的可用时段
+        loadAvailableSlots(dateStr);
+    }
+
+    // 加载可用时段
+    function loadAvailableSlots(dateStr) {
+        // 获取已预约的时段
+        fetch(`/landlord/api/property/${propertyId}/appointment-slots?date=${dateStr}`)
+            .then(res => res.json())
+            .then(data => {
+                const bookedSlots = data.booked_slots || [];
+                timeSlots.forEach(slot => {
+                    const time = slot.dataset.time;
+                    if (bookedSlots.includes(time)) {
+                        slot.classList.add('booked');
+                        slot.classList.remove('available');
+                    } else {
+                        slot.classList.add('available');
+                        slot.classList.remove('booked');
+                    }
+                });
+            })
+            .catch(err => {
+                console.error('获取时段失败:', err);
+                // 默认所有时段可用
+                timeSlots.forEach(slot => {
+                    slot.classList.add('available');
+                    slot.classList.remove('booked');
+                });
+            });
+    }
+
+    // 选择时段
+    timeSlots.forEach(slot => {
+        slot.addEventListener('click', function() {
+            if (this.classList.contains('booked') || this.classList.contains('disabled')) return;
+
+            // 移除之前的选中
+            timeSlots.forEach(s => s.classList.remove('selected'));
+
+            this.classList.add('selected');
+            selectedTime = this.dataset.time;
+
+            // 构建完整时间
+            const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+            preferredTimeInput.value = `${dateStr} ${selectedTime}:00`;
+
+            // 更新确认显示
+            confirmedDateTime.textContent = `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日 ${selectedTime}`;
+
+            // 启用提交按钮
+            submitBtn.disabled = false;
+
+            // 切换到确认
+            timeSlotsContainer.style.display = 'none';
+            confirmationContainer.style.display = 'block';
+            updateStepIndicator(3);
+
+            // 显示Toast提示
+            showToast('时间已选择，请确认预约信息', 'success');
+        });
+    });
+
+    // 返回日历
+    backToCalendarBtn.addEventListener('click', function() {
+        timeSlotsContainer.style.display = 'none';
+        calendarContainer.style.display = 'block';
+        updateStepIndicator(1);
+    });
+
+    // 返回时段选择
+    backToSlotsBtn.addEventListener('click', function() {
+        confirmationContainer.style.display = 'none';
+        timeSlotsContainer.style.display = 'block';
+        updateStepIndicator(2);
+    });
+
+    // 月份导航
+    prevMonthBtn.addEventListener('click', function() {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+    });
+
+    nextMonthBtn.addEventListener('click', function() {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+    });
+
+    // 更新步骤指示器
+    function updateStepIndicator(step) {
+        [step1, step2, step3].forEach((s, i) => {
+            s.classList.remove('active', 'completed');
+            if (i + 1 < step) {
+                s.classList.add('completed');
+            } else if (i + 1 === step) {
+                s.classList.add('active');
+            }
+        });
+
+        stepLines.forEach((line, i) => {
+            line.classList.toggle('active', i + 1 < step);
+        });
+    }
+
+    // Toast提示
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'primary'} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        container.appendChild(toast);
+
+        const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+        bsToast.show();
+
+        toast.addEventListener('hidden.bs.toast', () => toast.remove());
+    }
+
+    // 表单提交
+    document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+        if (!preferredTimeInput.value) {
+            e.preventDefault();
+            document.getElementById('timeError').style.display = 'block';
+            preferredTimeInput.classList.add('is-invalid');
+            return;
+        }
+
+        // 显示确认
+        showToast('正在提交预约...', 'info');
+    });
+
+    // 初始化
+    initCalendar();
+});
+</script>
+{% endblock %}

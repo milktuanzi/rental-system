@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - Rental System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .profile-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        font-weight: 600;
+        margin: 0 auto 1rem;
+    }
+    
+    .tab-content {
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .form-control:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25);
+    }
+    
+    .btn-group {
+        gap: 1rem;
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        border: none;
+    }
+    
+    .btn-success:hover {
+        background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    }
+    
+    .btn-cancel {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-cancel:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+    
+    .loading-spinner {
+        display: none;
+    }
+    
+    .btn:disabled .btn-text {
+        display: none;
+    }
+    
+    .btn:disabled .loading-spinner {
+        display: inline;
+    }
+    
+    .field-error {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: none;
+    }
+    
+    .field-error.show {
+        display: block;
+    }
+    
+    .password-hint {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container py-5">
+    <div class="profile-header">
+        <div class="profile-avatar">{{ current_user.username[0].upper() if current_user.username else 'U' }}</div>
+        <h2>{{ current_user.username }}</h2>
+        <p class="text-muted">{{ current_user.email }}</p>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <ul class="nav nav-tabs card-header-tabs" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">
+                        <i class="fa fa-user me-2"></i>Basic Info
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="false">
+                        <i class="fa fa-lock me-2"></i>Change Password
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card-body">
+            <div class="tab-content" id="profileTabContent">
+                <!-- Basic Info Form -->
+                <div class="tab-pane fade show active" id="profile">
+                    <form id="profileForm" novalidate>
+                        {{ profile_form.hidden_tag() }}
+
+                        <!-- Username -->
+                        <div class="form-group mb-4">
+                            {{ profile_form.username.label(class="form-label", for="profileUsername") }}
+                            {{ profile_form.username(class="form-control", id="profileUsername", placeholder="Enter username", autocomplete="username") }}
+                            <div class="field-error" id="error-profileUsername"></div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="form-group mb-4">
+                            {{ profile_form.email.label(class="form-label", for="profileEmail") }}
+                            {{ profile_form.email(class="form-control", id="profileEmail", placeholder="Enter email address", autocomplete="email") }}
+                            <div class="field-error" id="error-profileEmail"></div>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="form-group mb-4">
+                            {{ profile_form.phone.label(class="form-label", for="profilePhone") }}
+                            {{ profile_form.phone(class="form-control", id="profilePhone", placeholder="Enter 11-digit phone number", autocomplete="tel") }}
+                            <div class="field-error" id="error-profilePhone"></div>
+                        </div>
+
+                        <!-- Bio -->
+                        <div class="form-group mb-4">
+                            {{ profile_form.bio.label(class="form-label", for="profileBio") }}
+                            {{ profile_form.bio(class="form-control", id="profileBio", placeholder="Enter bio (optional)", autocomplete="off") }}
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="btn-group d-flex">
+                            <button type="submit" class="btn btn-success flex-1" id="profileSubmitBtn">
+                                <span class="btn-text"><i class="fa fa-check"></i> Save Changes</span>
+                                <span class="loading-spinner"><i class="fa fa-spinner fa-spin"></i> Processing...</span>
+                            </button>
+                            <a href="{{ url_for('common.index') }}" class="btn btn-cancel flex-1">
+                                <i class="fa fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Password Change Form -->
+                <div class="tab-pane fade" id="password">
+                    <form id="passwordForm" novalidate onsubmit="return handlePasswordSubmit(event)">
+                        {{ password_form.csrf_token(id='passwordCsrfToken') }}
+
+                        <!-- Current Password -->
+                        <div class="form-group mb-4">
+                            {{ password_form.current_password.label(class="form-label", for="currentPassword") }}
+                            {{ password_form.current_password(class="form-control", id="currentPassword", placeholder="Enter current password", autocomplete="current-password") }}
+                            <div class="field-error" id="error-currentPassword"></div>
+                        </div>
+
+                        <!-- New Password -->
+                        <div class="form-group mb-4">
+                            {{ password_form.new_password.label(class="form-label", for="newPassword") }}
+                            {{ password_form.new_password(class="form-control", id="newPassword", placeholder="Enter new password", autocomplete="new-password") }}
+                            <div class="password-hint">
+                                <i class="fa fa-info-circle"></i> Password must be at least 8 characters with letters and numbers
+                            </div>
+                            <div class="field-error" id="error-newPassword"></div>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="form-group mb-4">
+                            {{ password_form.confirm_password.label(class="form-label", for="confirmPassword") }}
+                            {{ password_form.confirm_password(class="form-control", id="confirmPassword", placeholder="Confirm new password", autocomplete="new-password") }}
+                            <div class="field-error" id="error-confirmPassword"></div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="btn-group d-flex">
+                            <button type="submit" class="btn btn-success flex-1" id="passwordSubmitBtn">
+                                <span class="btn-text"><i class="fa fa-check"></i> Confirm</span>
+                                <span class="loading-spinner"><i class="fa fa-spinner fa-spin"></i> Processing...</span>
+                            </button>
+                            <a href="{{ url_for('common.index') }}" class="btn btn-cancel flex-1">
+                                <i class="fa fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Password change form submit handler
+function handlePasswordSubmit(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('passwordForm');
+    const submitBtn = document.getElementById('passwordSubmitBtn');
+    submitBtn.disabled = true;
+    
+    const formData = new FormData(form);
+    
+    fetch('/auth/api/profile/change-password', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showSuccessModal('Password Changed!', 'Your password has been changed successfully. Please login with your new password.');
+            form.reset();
+            submitBtn.disabled = true;
+            setTimeout(() => {
+                window.location.href = '/auth/logout';
+            }, 3000);
+        } else {
+            showToast(result.message, 'error');
+            if (result.errors) {
+                Object.keys(result.errors).forEach(field => {
+                    showFieldError(field, result.errors[field]);
+                });
+            }
+            submitBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Request error:', error);
+        showToast('Network error, please try again', 'error');
+        submitBtn.disabled = false;
+    });
+    
+    return false;
+}
+
+// Show toast message
+function showToast(message, type) {
+    type = type || 'success';
+    const container = document.querySelector('.toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast align-items-center text-white bg-' + (type === 'success' ? 'success' : type === 'error' ? 'danger' : 'primary') + ' border-0';
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = '<div class="d-flex"><div class="toast-body"><i class="fa fa-' + (type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle') + ' me-2"></i>' + message + '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button></div>';
+    container.appendChild(toast);
+    
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(100%)';
+    setTimeout(function() {
+        toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(0)';
+    }, 50);
+    
+    setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 5000);
+}
+
+// Show field error
+function showFieldError(fieldId, errorMessage) {
+    const field = document.getElementById(fieldId);
+    const errorElement = document.getElementById('error-' + fieldId);
+    
+    if (field) field.classList.add('is-invalid');
+    if (errorElement) {
+        errorElement.textContent = errorMessage;
+        errorElement.classList.add('show');
+    }
+}
+
+// Clear field error
+function clearFieldError(fieldId) {
+    const field = document.getElementById(fieldId);
+    const errorElement = document.getElementById('error-' + fieldId);
+    
+    if (field) field.classList.remove('is-invalid');
+    if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.classList.remove('show');
+    }
+}
+
+// Clear all field errors
+function clearAllFieldErrors(formId) {
+    document.querySelectorAll('#' + formId + ' .field-error').forEach(function(error) {
+        error.textContent = '';
+        error.classList.remove('show');
+    });
+    document.querySelectorAll('#' + formId + ' .form-control').forEach(function(field) {
+        field.classList.remove('is-invalid');
+    });
+}
+
+// Show success modal
+function showSuccessModal(title, message) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade show';
+    modal.id = 'successModal';
+    modal.setAttribute('tabindex', '-1');
+    modal.setAttribute('role', 'dialog');
+    modal.style.display = 'block';
+    modal.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fa fa-check-circle me-2"></i>' + title + '</h5></div><div class="modal-body text-center py-4"><div class="mb-3"><i class="fa fa-shield-alt text-success" style="font-size: 3rem;"></i></div><p class="mb-3">' + message + '</p><div class="alert alert-info mb-0"><small><i class="fa fa-info-circle me-1"></i>Page will redirect in <span id="countdown">3</span> seconds</small></div></div><div class="modal-footer justify-content-center"><a href="/auth/logout" class="btn btn-success"><i class="fa fa-sign-out me-1"></i>Logout Now</a><button type="button" class="btn btn-outline-secondary" onclick="closeSuccessModal()">Stay on Page</button></div></div></div>';
+    
+    document.body.appendChild(modal);
+    
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop fade show';
+    backdrop.style.opacity = '0.5';
+    document.body.appendChild(backdrop);
+    
+    let seconds = 3;
+    const countdownInterval = setInterval(function() {
+        seconds--;
+        const countdownElement = document.getElementById('countdown');
+        if (countdownElement) {
+            countdownElement.textContent = seconds;
+        }
+        if (seconds <= 0) {
+            clearInterval(countdownInterval);
+        }
+    }, 1000);
+}
+
+// Close success modal
+function closeSuccessModal() {
+    const modal = document.getElementById('successModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        modal.remove();
+    }
+    
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(function(backdrop) { backdrop.remove(); });
+}
+
+// Page initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Profile form submit
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        profileForm.onsubmit = function(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('profileSubmitBtn');
+            submitBtn.disabled = true;
+            
+            fetch('/auth/api/profile/update', {
+                method: 'POST',
+                body: new FormData(profileForm)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    document.querySelector('.profile-avatar').textContent = document.getElementById('profileUsername').value[0].toUpperCase();
+                } else {
+                    showToast(result.message, 'error');
+                    if (result.errors) {
+                        Object.keys(result.errors).forEach(function(field) {
+                            showFieldError('profile' + field.charAt(0).toUpperCase() + field.slice(1), result.errors[field]);
+                        });
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Request error:', error);
+                showToast('Network error, please try again', 'error');
+            })
+            .finally(function() {
+                submitBtn.disabled = false;
+            });
+            
+            return false;
+        };
+    }
+    
+    // Real-time validation
+    document.querySelectorAll('.form-control').forEach(function(input) {
+        input.addEventListener('blur', function() {
+            const fieldId = this.id;
+            clearFieldError(fieldId);
+            
+            if (!this.value) {
+                showFieldError(fieldId, 'This field is required');
+                return;
+            }
+            
+            if (fieldId === 'profileEmail' || fieldId === 'email') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(this.value)) {
+                    showFieldError(fieldId, 'Please enter a valid email address');
+                }
+            }
+            
+            if (fieldId === 'profilePhone' || fieldId === 'phone') {
+                const phoneRegex = /^1[3-9]\d{9}$/;
+                if (!phoneRegex.test(this.value)) {
+                    showFieldError(fieldId, 'Please enter a valid 11-digit phone number');
+                }
+            }
+            
+            if (fieldId === 'newPassword') {
+                const password = this.value;
+                if (password.length < 8) {
+                    showFieldError(fieldId, 'Password must be at least 8 characters');
+                } else if (!/[a-zA-Z]/.test(password)) {
+                    showFieldError(fieldId, 'Password must contain at least one letter');
+                } else if (!/[0-9]/.test(password)) {
+                    showFieldError(fieldId, 'Password must contain at least one number');
+                }
+            }
+            
+            if (fieldId === 'confirmPassword') {
+                const newPassword = document.getElementById('newPassword').value;
+                if (this.value && this.value !== newPassword) {
+                    showFieldError(fieldId, 'Passwords do not match');
+                }
+            }
+        });
+        
+        input.addEventListener('input', function() {
+            clearFieldError(this.id);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}发布新房源 - 房东中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h2 class="mb-4">发布新房源</h2>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('landlord.add_property') }}" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- 显示所有表单错误 -->
+                        {% if form.errors %}
+                        <div class="alert alert-danger mb-4">
+                            <strong>表单验证失败，请检查以下字段：</strong>
+                            <ul class="mt-2">
+                                {% for field, errors in form.errors.items() %}
+                                    {% for error in errors %}
+                                        <li>{{ form[field].label.text }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- 基本信息 -->
+                        <h5 class="mb-3">基本信息</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.title.label(class="form-label") }}
+                                {% if form.title.errors %}
+                                    {{ form.title(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">{{ form.title.errors[0] }}</div>
+                                {% else %}
+                                    {{ form.title(class="form-control", placeholder="请输入房源标题，至少5个字符") }}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.address.label(class="form-label") }}
+                                {% if form.address.errors %}
+                                    {{ form.address(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">{{ form.address.errors[0] }}</div>
+                                {% else %}
+                                    {{ form.address(class="form-control", placeholder="请输入详细地址") }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.district.label(class="form-label") }}
+                                {{ form.district(class="form-control", placeholder="请输入所属区域") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.property_type.label(class="form-label") }}
+                                {{ form.property_type(class="form-select") }}
+                            </div>
+                        </div>
+
+                        <!-- 房源详情 -->
+                        <h5 class="mb-3 mt-4">房源详情</h5>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                {{ form.rooms.label(class="form-label") }}
+                                {% if form.rooms.errors %}
+                                    {{ form.rooms(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">{{ form.rooms.errors[0] }}</div>
+                                {% else %}
+                                    {{ form.rooms(class="form-control", placeholder="房间数量") }}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.halls.label(class="form-label") }}
+                                {% if form.halls.errors %}
+                                    {{ form.halls(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">{{ form.halls.errors[0] }}</div>
+                                {% else %}
+                                    {{ form.halls(class="form-control", placeholder="厅数量") }}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.bathrooms.label(class="form-label") }}
+                                {% if form.bathrooms.errors %}
+                                    {{ form.bathrooms(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">{{ form.bathrooms.errors[0] }}</div>
+                                {% else %}
+                                    {{ form.bathrooms(class="form-control", placeholder="卫生间数量") }}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.area.label(class="form-label") }}
+                                {% if form.area.errors %}
+                                    {{ form.area(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">{{ form.area.errors[0] }}</div>
+                                {% else %}
+                                    {{ form.area(class="form-control", placeholder="建筑面积") }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                {{ form.floor.label(class="form-label") }}
+                                {{ form.floor(class="form-control", placeholder="当前楼层，可选") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.total_floors.label(class="form-label") }}
+                                {{ form.total_floors(class="form-control", placeholder="总楼层，可选") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.decoration.label(class="form-label") }}
+                                {{ form.decoration(class="form-select") }}
+                            </div>
+                        </div>
+
+                        <!-- 价格和押金 -->
+                        <h5 class="mb-3 mt-4">价格信息</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.price.label(class="form-label") }}
+                                {% if form.price.errors %}
+                                    {{ form.price(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">{{ form.price.errors[0] }}</div>
+                                {% else %}
+                                    {{ form.price(class="form-control", placeholder="月租金") }}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.deposit.label(class="form-label") }}
+                                {% if form.deposit.errors %}
+                                    {{ form.deposit(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">{{ form.deposit.errors[0] }}</div>
+                                {% else %}
+                                    {{ form.deposit(class="form-control", placeholder="押金金额") }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- 描述 -->
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows="4", placeholder="请描述房源特色、周边环境等") }}
+                        </div>
+
+                        <!-- 设施 -->
+                        <div class="mb-3">
+                            {{ form.facilities.label(class="form-label") }}
+                            <div>
+                                {% for choice in form.facilities %}
+                                <div class="form-check form-check-inline">
+                                    {{ choice }}
+                                    {{ choice.label(class="form-check-label") }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- 状态 -->
+                        <div class="mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {% if form.status.errors %}
+                                {{ form.status(class="form-select is-invalid") }}
+                                <div class="invalid-feedback">{{ form.status.errors[0] }}</div>
+                            {% else %}
+                                {{ form.status(class="form-select") }}
+                            {% endif %}
+                        </div>
+
+                        <!-- 提交按钮 -->
+                        <div class="mt-4">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                            <a href="{{ url_for('landlord.properties') }}" class="btn btn-secondary btn-lg">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

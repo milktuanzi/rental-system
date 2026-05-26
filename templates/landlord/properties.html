@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}房源列表 - 房东中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>我的房源</h2>
+        <a href="{{ url_for('landlord.add_property') }}" class="btn btn-primary">+ 发布新房源</a>
+    </div>
+
+    {% if properties.items %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>房源标题</th>
+                    <th>地址</th>
+                    <th>户型</th>
+                    <th>租金</th>
+                    <th>状态</th>
+                    <th>发布时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prop in properties.items %}
+                <tr>
+                    <td>
+                        <strong>{{ prop.title }}</strong>
+                    </td>
+                    <td>{{ prop.address }}</td>
+                    <td>{{ prop.get_room_format() }}</td>
+                    <td>¥{{ prop.price }}/月</td>
+                    <td>
+                        {% if prop.status == 'available' %}
+                        <span class="badge bg-success">可租</span>
+                        {% elif prop.status == 'rented' %}
+                        <span class="badge bg-warning">已租</span>
+                        {% else %}
+                        <span class="badge bg-secondary">维修中</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ prop.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('landlord.edit_property', property_id=prop.id) }}" class="btn btn-sm btn-warning">编辑</a>
+                        <form action="{{ url_for('landlord.delete_property', property_id=prop.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除吗？')">删除</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页 -->
+    {% if properties.pages > 1 %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if properties.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('landlord.properties', page=properties.prev_num) }}">上一页</a></li>
+            {% endif %}
+
+            {% for page_num in properties.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num == properties.page %}
+                    <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('landlord.properties', page=page_num) }}">{{ page_num }}</a></li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {% if properties.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('landlord.properties', page=properties.next_num) }}">下一页</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="alert alert-info">
+        您还没有发布任何房源，<a href="{{ url_for('landlord.add_property') }}">立即发布</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

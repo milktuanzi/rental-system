@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}系统报表{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-6">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient-to-r from-green-600 to-emerald-500 text-white">
+                    <h4 class="mb-0">系统报表</h4>
+                </div>
+                <div class="card-body">
+                    <!-- 统计卡片 -->
+                    <div class="row mb-6">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <div class="text-3xl font-bold">{{ new_users_30days }}</div>
+                                    <div class="text-white/80">30天新增用户</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <div class="text-3xl font-bold">{{ property_stats.total }}</div>
+                                    <div class="text-white/80">总房源数</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <div class="text-3xl font-bold">{{ lease_stats.active }}</div>
+                                    <div class="text-white/80">活跃租赁</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <div class="text-3xl font-bold">{{ complaint_stats.pending }}</div>
+                                    <div class="text-white/80">待处理投诉</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 房源状态统计 -->
+                    <div class="card mb-6">
+                        <div class="card-header">
+                            <h5 class="text-gray-700">房源状态分布</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    <div class="text-4xl font-bold text-success">{{ property_stats.available }}</div>
+                                    <div class="text-gray-500">空置</div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="text-4xl font-bold text-info">{{ property_stats.rented }}</div>
+                                    <div class="text-gray-500">已出租</div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="text-4xl font-bold text-warning">{{ property_stats.maintenance }}</div>
+                                    <div class="text-gray-500">维修中</div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="text-4xl font-bold text-gray-600">{{ property_stats.total }}</div>
+                                    <div class="text-gray-500">总计</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 租赁状态统计 -->
+                    <div class="card mb-6">
+                        <div class="card-header">
+                            <h5 class="text-gray-700">租赁状态分布</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 text-center">
+                                    <div class="text-4xl font-bold text-success">{{ lease_stats.active }}</div>
+                                    <div class="text-gray-500">进行中</div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="text-4xl font-bold text-warning">{{ lease_stats.pending }}</div>
+                                    <div class="text-gray-500">待确认</div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="text-4xl font-bold text-gray-600">{{ lease_stats.completed }}</div>
+                                    <div class="text-gray-500">已完成</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 投诉状态统计 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="text-gray-700">投诉处理状态</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 text-center">
+                                    <div class="text-4xl font-bold text-danger">{{ complaint_stats.pending }}</div>
+                                    <div class="text-gray-500">待处理</div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="text-4xl font-bold text-warning">{{ complaint_stats.under_review }}</div>
+                                    <div class="text-gray-500">处理中</div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="text-4xl font-bold text-success">{{ complaint_stats.resolved }}</div>
+                                    <div class="text-gray-500">已解决</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

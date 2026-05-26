@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}我的投诉 - 租客中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">我的投诉</h2>
+
+    <div class="mb-3">
+        <a href="{{ url_for('tenant.add_complaint') }}" class="btn btn-danger">
+            <i class="fa fa-plus"></i> 提交新投诉
+        </a>
+    </div>
+
+    {% if complaints.items %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>类型</th>
+                            <th>状态</th>
+                            <th>提交时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for complaint in complaints.items %}
+                        <tr>
+                            <td>{{ complaint.title }}</td>
+                            <td>
+                                {% if complaint.complaint_type == 'property' %}
+                                <span class="badge bg-primary">房源问题</span>
+                                {% elif complaint.complaint_type == 'service' %}
+                                <span class="badge bg-info">服务问题</span>
+                                {% else %}
+                                <span class="badge bg-warning">其他</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if complaint.status == 'pending' %}
+                                <span class="badge bg-warning">待处理</span>
+                                {% elif complaint.status == 'under_review' %}
+                                <span class="badge bg-info">处理中</span>
+                                {% elif complaint.status == 'resolved' %}
+                                <span class="badge bg-success">已解决</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ complaint.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ complaint.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#detailModal{{ complaint.id }}">
+                                    查看详情
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            {% if complaints.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if complaints.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('tenant.complaints', page=complaints.prev_num) }}">上一页</a>
+                    </li>
+                    {% endif %}
+                    {% for page_num in complaints.iter_pages() %}
+                    {% if page_num %}
+                    <li class="page-item {{ 'active' if page_num == complaints.page else '' }}">
+                        <a class="page-link" href="{{ url_for('tenant.complaints', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if complaints.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('tenant.complaints', page=complaints.next_num) }}">下一页</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 投诉详情模态框 -->
+    {% for complaint in complaints.items %}
+    <div class="modal fade" id="detailModal{{ complaint.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">投诉详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>投诉类型：</strong>
+                            {% if complaint.complaint_type == 'property' %}房源问题{% elif complaint.complaint_type == 'service' %}服务问题{% else %}其他{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>状态：</strong>
+                            {% if complaint.status == 'pending' %}待处理{% elif complaint.status == 'under_review' %}处理中{% elif complaint.status == 'resolved' %}已解决{% else %}{{ complaint.status }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>投诉标题：</strong>
+                        <p>{{ complaint.title }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong>投诉内容：</strong>
+                        <p>{{ complaint.content }}</p>
+                    </div>
+                    {% if complaint.admin_reply %}
+                    <div class="mb-3">
+                        <strong>管理员回复：</strong>
+                        <div class="alert alert-info">{{ complaint.admin_reply }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="text-muted">
+                        <small>提交时间：{{ complaint.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <i class="fa fa-commenting-o fa-3x mb-3 text-muted"></i>
+        <h5>暂无投诉记录</h5>
+        <p>您还没有提交任何投诉</p>
+        <a href="{{ url_for('tenant.add_complaint') }}" class="btn btn-danger mt-3">提交投诉</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

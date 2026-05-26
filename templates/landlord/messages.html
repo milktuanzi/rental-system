@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}消息管理 - 房东中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">消息管理</h2>
+
+    {% if messages.items %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>发件人</th>
+                            <th>内容预览</th>
+                            <th>类型</th>
+                            <th>状态</th>
+                            <th>时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for message in messages.items %}
+                        <tr>
+                            <td>{{ message.sender.username }}</td>
+                            <td>{{ message.content[:50] }}{% if message.content|length > 50 %}...{% endif %}</td>
+                            <td>
+                                {% if message.message_type == 'notification' %}
+                                <span class="badge bg-info">通知</span>
+                                {% elif message.message_type == 'inquiry' %}
+                                <span class="badge bg-primary">咨询</span>
+                                {% else %}
+                                <span class="badge bg-secondary">消息</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if message.is_read %}
+                                <span class="badge bg-success">已读</span>
+                                {% else %}
+                                <span class="badge bg-warning">未读</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ message.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <a href="{{ url_for('landlord.message_detail', message_id=message.id) }}" class="btn btn-sm btn-primary view-detail-btn">
+                                    <i class="fa fa-eye"></i> 查看详情
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            {% if messages.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if messages.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('landlord.messages', page=messages.prev_num) }}">上一页</a>
+                    </li>
+                    {% endif %}
+                    {% for page_num in messages.iter_pages() %}
+                    {% if page_num %}
+                    <li class="page-item {{ 'active' if page_num == messages.page else '' }}">
+                        <a class="page-link" href="{{ url_for('landlord.messages', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if messages.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('landlord.messages', page=messages.next_num) }}">下一页</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <i class="fa fa-envelope-o fa-3x mb-3 text-muted"></i>
+        <h5>暂无消息</h5>
+        <p>还没有收到任何消息</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

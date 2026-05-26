@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}新闻管理{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-6">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient-to-r from-green-600 to-emerald-500 text-white">
+                    <h4 class="mb-0">新闻管理</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-4">
+                        <h5 class="text-gray-700">我的新闻</h5>
+                        <a href="{{ url_for('landlord.add_news') }}" class="btn btn-success btn-sm">
+                            <i class="fa fa-plus"></i> 发布新闻
+                        </a>
+                    </div>
+                    
+                    {% if news.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>标题</th>
+                                    <th>类型</th>
+                                    <th>发布时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in news.items %}
+                                <tr>
+                                    <td>{{ item.title }}</td>
+                                    <td>{{ item.news_type }}</td>
+                                    <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <a href="#" class="btn btn-info btn-xs">编辑</a>
+                                        <form action="#" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-danger btn-xs" onclick="return confirm('确定删除？')">删除</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    {% if news.pages > 1 %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if news.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('landlord.news', page=news.prev_num) }}">上一页</a>
+                            </li>
+                            {% endif %}
+                            {% for page in news.iter_pages() %}
+                            <li class="page-item {% if page == news.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('landlord.news', page=page) }}">{{ page }}</a>
+                            </li>
+                            {% endfor %}
+                            {% if news.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('landlord.news', page=news.next_num) }}">下一页</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="fa fa-newspaper-o text-gray-400" style="font-size: 4rem;"></i>
+                        <p class="text-gray-500 mt-3">暂无新闻</p>
+                        <a href="{{ url_for('landlord.add_news') }}" class="btn btn-success">发布第一条新闻</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

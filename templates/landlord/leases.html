@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}租赁合同管理 - 房东中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">租赁合同管理</h2>
+
+    {% if leases.items %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>房源</th>
+                            <th>租客</th>
+                            <th>租金</th>
+                            <th>租赁期限</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lease in leases.items %}
+                        <tr>
+                            <td>{{ lease.property.title }}</td>
+                            <td>{{ lease.property.tenant.username }}</td>
+                            <td>¥{{ lease.monthly_rent }}/月</td>
+                            <td>{{ lease.start_date.strftime('%Y-%m-%d') }} 至 {{ lease.end_date.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if lease.status == 'active' %}
+                                <span class="badge bg-success">活跃</span>
+                                {% elif lease.status == 'pending' %}
+                                <span class="badge bg-warning">待签署</span>
+                                {% elif lease.status == 'completed' %}
+                                <span class="badge bg-secondary">已完成</span>
+                                {% else %}
+                                <span class="badge bg-danger">{{ lease.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-primary">详情</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            {% if leases.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if leases.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('landlord.leases', page=leases.prev_num) }}">上一页</a>
+                    </li>
+                    {% endif %}
+                    {% for page_num in leases.iter_pages() %}
+                    {% if page_num %}
+                    <li class="page-item {{ 'active' if page_num == leases.page else '' }}">
+                        <a class="page-link" href="{{ url_for('landlord.leases', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if leases.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('landlord.leases', page=leases.next_num) }}">下一页</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <i class="fa fa-file-text-o fa-3x mb-3 text-muted"></i>
+        <h5>暂无租赁合同</h5>
+        <p>还没有任何租赁合同</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

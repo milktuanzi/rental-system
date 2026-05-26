@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}消息详情 - 房东中心{% endblock %}
+
+{% block extra_css %}
+<style>
+    .message-detail-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .message-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .sender-info {
+        flex: 1;
+    }
+    
+    .sender-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    
+    .message-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .message-content {
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    
+    .message-meta {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .message-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .sender-avatar {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 message-detail-container">
+    <!-- 返回按钮 -->
+    <div class="mb-4">
+        <a href="{{ url_for('landlord.messages') }}" class="btn btn-secondary back-btn">
+            <i class="fa fa-arrow-left"></i> 返回消息列表
+        </a>
+    </div>
+
+    <!-- 消息详情卡片 -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <div class="message-header">
+                <div class="sender-avatar">
+                    {{ message.sender.username[0].upper() }}
+                </div>
+                <div class="sender-info">
+                    <h3 class="card-title mb-1">{{ message.sender.username }}</h3>
+                    <div class="message-meta">
+                        <span>{{ message.created_at.strftime('%Y年%m月%d日 %H:%M') }}</span>
+                        <span class="mx-2">·</span>
+                        {% if message.message_type == 'notification' %}
+                        <span class="badge bg-info message-badge">通知</span>
+                        {% elif message.message_type == 'inquiry' %}
+                        <span class="badge bg-primary message-badge">咨询</span>
+                        {% else %}
+                        <span class="badge bg-secondary message-badge">消息</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="message-content">
+                {{ message.content }}
+            </div>
+        </div>
+        
+        <div class="card-footer bg-light">
+            <div class="message-meta">
+                {% if message.is_read %}
+                <span class="text-success"><i class="fa fa-check-circle"></i> 已读</span>
+                {% else %}
+                <span class="text-warning"><i class="fa fa-clock-o"></i> 未读</span>
+                {% endif %}
+                <span class="mx-2">·</span>
+                <span>消息ID: {{ message.id }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="mt-4 d-flex gap-2">
+        <a href="{{ url_for('landlord.messages') }}" class="btn btn-primary flex-1">
+            <i class="fa fa-inbox"></i> 返回消息列表
+        </a>
+        <button type="button" class="btn btn-outline-secondary" onclick="goBack()">
+            <i class="fa fa-arrow-left"></i> 上一页
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 返回上一页
+    function goBack() {
+        window.history.back();
+    }
+    
+    // 页面加载完成后的初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('消息详情页面加载完成');
+    });
+    
+    // 错误处理示例
+    window.addEventListener('error', function(e) {
+        console.error('页面加载错误:', e.error);
+        alert('页面加载出现问题，请刷新重试');
+    });
+</script>
+{% endblock %}
