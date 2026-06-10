@@ -20,6 +20,8 @@
                     <thead>
                         <tr>
                             <th>标题</th>
+                            <th>房源</th>
+                            <th>房东</th>
                             <th>类型</th>
                             <th>状态</th>
                             <th>提交时间</th>
@@ -30,6 +32,8 @@
                         {% for complaint in complaints.items %}
                         <tr>
                             <td>{{ complaint.title }}</td>
+                            <td>{{ complaint.property.title if complaint.property else '-' }}</td>
+                            <td>{{ complaint.target.username if complaint.target else '-' }}</td>
                             <td>
                                 {% if complaint.complaint_type == 'property' %}
                                 <span class="badge bg-primary">房源问题</span>
@@ -103,13 +107,21 @@
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>投诉类型：</strong>
+                        <strong>投诉类型：</strong>
                             {% if complaint.complaint_type == 'property' %}房源问题{% elif complaint.complaint_type == 'service' %}服务问题{% else %}其他{% endif %}
                         </div>
                         <div class="col-md-6">
                             <strong>状态：</strong>
                             {% if complaint.status == 'pending' %}待处理{% elif complaint.status == 'under_review' %}处理中{% elif complaint.status == 'resolved' %}已解决{% else %}{{ complaint.status }}{% endif %}
                         </div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>关联房源：</strong>
+                        <p>{{ complaint.property.title if complaint.property else '-' }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong>处理房东：</strong>
+                        <p>{{ complaint.target.username if complaint.target else '-' }}</p>
                     </div>
                     <div class="mb-3">
                         <strong>投诉标题：</strong>
@@ -121,7 +133,7 @@
                     </div>
                     {% if complaint.admin_reply %}
                     <div class="mb-3">
-                        <strong>管理员回复：</strong>
+                        <strong>房东处理说明：</strong>
                         <div class="alert alert-info">{{ complaint.admin_reply }}</div>
                     </div>
                     {% endif %}

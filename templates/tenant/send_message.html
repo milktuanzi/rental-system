@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}联系房东 - 租客中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">联系房东</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>收件人：</strong>{{ receiver.username }}
+                        {% if receiver.phone %}
+                        <span class="ms-3"><strong>电话：</strong>{{ receiver.phone }}</span>
+                        {% endif %}
+                    </div>
+
+                    <form method="POST" action="{{ url_for('tenant.send_message', receiver_id=receiver.id) }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            {{ form.content(class="form-control", rows=6, placeholder="请输入咨询内容，例如看房时间、租金、入住要求等") }}
+                            {% for error in form.content.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">发送消息</button>
+                        <a href="{{ request.referrer or url_for('common.search') }}" class="btn btn-secondary">返回</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

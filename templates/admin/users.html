@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}用户管理 - 管理后台{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="mb-3">用户管理</h1>
+    <form class="row g-2 mb-3" method="get">
+        <div class="col-md-4"><input class="form-control" name="keyword" value="{{ keyword }}" placeholder="搜索用户名、邮箱、手机号"></div>
+        <div class="col-md-2"><select class="form-select" name="type"><option value="">全部角色</option><option value="tenant" {% if user_type=='tenant' %}selected{% endif %}>租客</option><option value="landlord" {% if user_type=='landlord' %}selected{% endif %}>房东</option><option value="admin" {% if user_type=='admin' %}selected{% endif %}>管理员</option></select></div>
+        <div class="col-md-2"><select class="form-select" name="status"><option value="">全部状态</option><option value="active" {% if status=='active' %}selected{% endif %}>启用</option><option value="disabled" {% if status=='disabled' %}selected{% endif %}>禁用</option></select></div>
+        <div class="col-md-2"><button class="btn btn-success w-100">筛选</button></div>
+    </form>
+    <div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+        <thead><tr><th>ID</th><th>用户</th><th>联系方式</th><th>角色</th><th>认证</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
+        <tbody>{% for user in users.items %}<tr>
+            <td>{{ user.id }}</td><td><strong>{{ user.username }}</strong><div class="text-muted small">{{ user.bio or '' }}</div></td><td>{{ user.email }}<br><span class="text-muted">{{ user.phone or '-' }}</span></td>
+            <td><form method="post" action="{{ url_for('admin.update_user_type', user_id=user.id) }}"><select name="user_type" class="form-select form-select-sm" onchange="this.form.submit()" {% if user.id == current_user.id %}disabled{% endif %}><option value="tenant" {% if user.user_type=='tenant' %}selected{% endif %}>租客</option><option value="landlord" {% if user.user_type=='landlord' %}selected{% endif %}>房东</option><option value="admin" {% if user.user_type=='admin' %}selected{% endif %}>管理员</option></select></form></td>
+            <td>{{ '已认证' if user.is_verified else '未认证' }}</td><td><span class="badge {{ 'bg-success' if user.is_active else 'bg-secondary' }}">{{ '启用' if user.is_active else '禁用' }}</span></td><td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+            <td class="d-flex gap-1"><form method="post" action="{{ url_for('admin.verify_user', user_id=user.id) }}"><button class="btn btn-sm btn-outline-info">{{ '取消认证' if user.is_verified else '认证' }}</button></form><form method="post" action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}"><button class="btn btn-sm btn-outline-warning" {% if user.id == current_user.id %}disabled{% endif %}>{{ '禁用' if user.is_active else '启用' }}</button></form></td>
+        </tr>{% else %}<tr><td colspan="8" class="text-center text-muted py-4">暂无用户</td></tr>{% endfor %}</tbody>
+    </table></div></div>
+    {% include 'admin/_pagination.html' with context %}
+</div>
+{% endblock %}

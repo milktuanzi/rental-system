@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{{ news.title }} - 新闻公告{% endblock %}
+
+{% block content %}
+<div class="tweet-detail-page py-4">
+    <article class="tweet-detail-card">
+        <div class="tweet-detail-topline">
+            <a href="{{ url_for('common.news') }}" class="btn btn-sm btn-outline-secondary">返回新闻</a>
+        </div>
+
+        <div class="tweet-author-row">
+            <div class="tweet-avatar">{{ news.author.username[0].upper() }}</div>
+            <div>
+                <div class="tweet-author-name">{{ news.author.username }}</div>
+                <div class="tweet-meta">{{ news.created_at.strftime('%Y-%m-%d %H:%M') }} · {{ news_type_labels.get(news.news_type, news.news_type) }}</div>
+            </div>
+        </div>
+
+        <h1 class="tweet-detail-title">{{ news.title }}</h1>
+
+        {% if news.cover_image %}
+        <img class="tweet-cover-image" src="{{ news.cover_image }}" alt="{{ news.title }} 封面图">
+        {% endif %}
+
+        <div class="tweet-detail-content">{{ news.content|replace('\n', '<br>')|safe }}</div>
+
+        {% if news.content_images %}
+        <div class="tweet-detail-grid">
+            {% for image in news.content_images %}
+            <img src="{{ image }}" alt="新闻内容图 {{ loop.index }}">
+            {% endfor %}
+        </div>
+        {% endif %}
+    </article>
+</div>
+{% endblock %}

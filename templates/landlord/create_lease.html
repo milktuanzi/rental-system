@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}发起租赁合同 - 房东中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">发起租赁合同</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.monthly_rent.label(class="form-label") }}
+                                {{ form.monthly_rent(class="form-control") }}
+                                {% for error in form.monthly_rent.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.deposit_amount.label(class="form-label") }}
+                                {{ form.deposit_amount(class="form-control") }}
+                                {% for error in form.deposit_amount.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.start_date.label(class="form-label") }}
+                                {{ form.start_date(class="form-control") }}
+                                {% for error in form.start_date.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.lease_duration.label(class="form-label") }}
+                                {{ form.lease_duration(class="form-control") }}
+                                {% for error in form.lease_duration.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.contract_content.label(class="form-label") }}
+                            {{ form.contract_content(class="form-control", rows=12) }}
+                            {% for error in form.contract_content.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <button type="submit" class="btn btn-success">发起合同并通知租客</button>
+                        <a href="{{ url_for('landlord.appointments') }}" class="btn btn-secondary">取消</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">预约信息</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>房源：</strong>{{ appointment.property.title }}</p>
+                    <p><strong>地址：</strong>{{ appointment.property.get_location() }}{{ appointment.property.address }}</p>
+                    <p><strong>租客：</strong>{{ appointment.tenant.username }}</p>
+                    <p><strong>预约时间：</strong>{{ appointment.preferred_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p class="text-muted mb-0">合同发起后会出现在租客的“我的租赁”中，等待租客签署。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

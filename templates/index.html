@@ -2,107 +2,232 @@
 
 {% block title %}首页 - 智能房屋租赁系统{% endblock %}
 
-{% block content %}
-<!-- 顶部横幅 -->
-<div class="banner-section h-72">
-    <img src="{{ url_for('static', filename='images/banners/home-banner.jpg') }}" class="w-full h-full object-cover" alt="房屋租赁">
-    <div class="banner-overlay">
-        <div class="banner-content">
-            <h1 class="banner-title">找到您的理想住所</h1>
-            <p class="banner-subtitle">专业、透明、可靠的房屋租赁服务</p>
-        </div>
-    </div>
-</div>
+{% block extra_css %}
+<style>
+    .home-feed {
+        padding: 1.5rem 0 3rem;
+    }
 
-<!-- 搜索栏 -->
-<div class="bg-gradient-to-r from-green-50 to-emerald-50 py-5">
-    <div class="container">
-        <form action="{{ url_for('common.search') }}" method="get" class="row g-3">
-            <div class="col-md-4">
-                <input type="text" class="form-control" name="keyword" placeholder="关键词搜索...">
-            </div>
-            <div class="col-md-4">
-                <input type="text" class="form-control" name="district" placeholder="搜索区域...">
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary w-100">搜索</button>
-            </div>
-        </form>
-    </div>
-</div>
+    .home-section {
+        margin-top: 1.25rem;
+    }
 
-<!-- 热门区域 -->
-<div class="container py-5">
-    <h2 class="mb-4">热门区域</h2>
-    <div class="row">
-        {% for district, count in popular_districts %}
-        <div class="col-md-3 col-sm-6 mb-3">
-            <a href="{{ url_for('common.search', district=district) }}" class="card text-decoration-none">
-                <div class="card-body">
-                    <h5 class="card-title">{{ district }}</h5>
-                    <p class="card-text">{{ count }} 套房源</p>
-                </div>
-            </a>
-        </div>
-        {% endfor %}
-    </div>
-</div>
+    .home-section-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: end;
+        margin-bottom: 1rem;
+    }
 
-<!-- 最新房源 -->
-<div class="container py-5">
-    <h2 class="mb-4">最新房源</h2>
-    <div class="row">
-        {% for property in properties.items %}
-        <div class="col-md-4 col-sm-6 mb-4">
-            <div class="card h-100 shadow-sm overflow-hidden">
-                <div class="relative h-48 bg-gradient-to-br from-green-100 to-emerald-100">
-                    {% if property.images and property.images|length > 0 %}
-                    <img src="{{ property.images[0] }}" class="w-full h-full object-cover" alt="{{ property.title }}">
-                    {% else %}
-                    <img src="{{ url_for('static', filename='images/properties/modern-apartment-exterior.jpg') }}" class="w-full h-full object-cover" alt="{{ property.title }}">
-                    {% endif %}
-                    <div class="absolute top-2 right-2">
-                        <span class="badge bg-white/90 text-green-700 px-2 py-1">{{ property.get_room_format() }}</span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title font-semibold">{{ property.title }}</h5>
-                    <p class="text-gray-500 text-sm mb-2">{{ property.address }}</p>
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-2xl font-bold text-green-600">¥{{ property.price }}</span>
-                        <span class="text-sm text-gray-400">{{ property.area }}m²</span>
-                    </div>
-                    <a href="{{ url_for('common.property_detail', property_id=property.id) }}" class="btn btn-primary btn-sm w-full">查看详情</a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
+    .home-section-title {
+        margin: 0;
+        font-size: 1.45rem;
+        font-weight: 850;
+        letter-spacing: -0.03em;
+        color: #0f2f24;
+    }
 
-    <!-- 分页 -->
-    {% if properties.pages > 1 %}
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            {% if properties.has_prev %}
-            <li class="page-item"><a class="page-link" href="{{ url_for('common.index', page=properties.prev_num) }}">上一页</a></li>
-            {% endif %}
+    .home-section-subtitle {
+        margin: 0.2rem 0 0;
+        color: #64746d;
+    }
 
-            {% for page_num in properties.iter_pages() %}
-                {% if page_num %}
-                    {% if page_num == properties.page %}
-                    <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
-                    {% else %}
-                    <li class="page-item"><a class="page-link" href="{{ url_for('common.index', page=page_num) }}">{{ page_num }}</a></li>
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
+    .home-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 0.9rem;
+    }
 
-            {% if properties.has_next %}
-            <li class="page-item"><a class="page-link" href="{{ url_for('common.index', page=properties.next_num) }}">下一页</a></li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
-</div>
+    .home-card {
+        display: block;
+        color: inherit;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 10px 26px rgba(6, 78, 59, 0.08);
+        border: 1px solid rgba(5, 150, 105, 0.1);
+        transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .home-card:hover {
+        color: inherit;
+        transform: translateY(-4px);
+        box-shadow: 0 18px 36px rgba(6, 78, 59, 0.13);
+    }
+
+    .home-thumb {
+        position: relative;
+        aspect-ratio: 16 / 10;
+        background: linear-gradient(135deg, #dff8eb, #effff6);
+    }
+
+    .home-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .home-badge {
+        position: absolute;
+        left: 0.75rem;
+        bottom: 0.75rem;
+        border-radius: 999px;
+        padding: 0.3rem 0.6rem;
+        background: rgba(18, 55, 42, 0.86);
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 800;
+    }
+
+    .home-card-body {
+        padding: 0.7rem;
+    }
+
+    .home-card-title {
+        min-height: 2.6em;
+        margin: 0;
+        font-size: 0.88rem;
+        font-weight: 800;
+        line-height: 1.3;
+        color: #10271f;
+    }
+
+    .home-card-meta {
+        margin: 0.45rem 0 0;
+        color: #6b7c73;
+        font-size: 0.76rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .home-card-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.8rem;
+    }
+
+    .home-price {
+        color: #059669;
+        font-size: 0.98rem;
+        font-weight: 900;
+    }
+
+    .home-area {
+        color: #7b8d84;
+        font-size: 0.74rem;
+    }
+
+    .district-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.9rem;
+    }
+
+    .district-card {
+        padding: 1rem;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #ffffff, #effff6);
+        border: 1px solid rgba(5, 150, 105, 0.1);
+        color: #12372a;
+        box-shadow: 0 8px 20px rgba(6, 78, 59, 0.06);
+    }
+
+    .district-card strong {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .district-card span {
+        color: #6b7c73;
+        font-size: 0.88rem;
+    }
+
+    @media (max-width: 1200px) {
+        .district-strip {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .home-grid,
+        .district-strip {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 520px) {
+        .home-grid,
+        .district-strip {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
 
+{% macro property_card(property) %}
+<a href="{{ url_for('common.property_detail', property_id=property.id) }}" class="home-card">
+    <div class="home-thumb">
+        {% if property.images and property.images|length > 0 %}
+        <img src="{{ property.images[0] }}" alt="{{ property.title }}">
+        {% else %}
+        <img src="{{ url_for('static', filename='images/properties/modern-apartment-exterior.jpg') }}" alt="{{ property.title }}">
+        {% endif %}
+        <span class="home-badge">{{ property.get_room_format() }}</span>
+    </div>
+    <div class="home-card-body">
+        <h3 class="home-card-title">{{ property.title }}</h3>
+        <p class="home-card-meta">{{ property.get_location() or '未知区域' }} · {{ property.address }}</p>
+        <div class="home-card-foot">
+            <span class="home-price">¥{{ property.price|round|int }}/月</span>
+            <span class="home-area">{{ property.area|round|int }}m²</span>
+        </div>
+    </div>
+</a>
+{% endmacro %}
+
+{% block content %}
+<div class="container home-feed">
+    {% if popular_districts %}
+    <section class="home-section">
+        <div class="home-section-header">
+            <div>
+                <h2 class="home-section-title">热门区域</h2>
+                <p class="home-section-subtitle">像频道标签一样快速切换区域</p>
+            </div>
+        </div>
+        <div class="district-strip">
+            {% for province, city, district, count in popular_districts %}
+            <a href="{{ url_for('common.search', province=province, city=city, district=district) }}" class="district-card">
+                <strong>{{ province }}{{ city }}{{ district }}</strong>
+                <span>{{ count }} 套可租房源</span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% for section in featured_sections %}
+    {% if section.properties %}
+    <section class="home-section">
+        <div class="home-section-header">
+            <div>
+                <h2 class="home-section-title">{{ section.title }}</h2>
+                <p class="home-section-subtitle">{{ section.subtitle }}</p>
+            </div>
+            <a href="{{ section.url }}" class="btn btn-sm btn-outline-success">查看全部</a>
+        </div>
+        <div class="home-grid">
+            {% for property in section.properties %}
+            {{ property_card(property) }}
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}

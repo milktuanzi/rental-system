@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}新闻公告 - 智能房屋租赁系统{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="mb-1">新闻公告</h1>
+            <p class="text-muted mb-0">查看房东和平台发布的租赁、维修和公告信息。</p>
+        </div>
+    </div>
+
+    <div class="btn-group btn-group-sm mb-3">
+        <a href="{{ url_for('common.news') }}" class="btn btn-outline-success {{ 'active' if not news_type else '' }}">全部</a>
+        <a href="{{ url_for('common.news', news_type='rental') }}" class="btn btn-outline-success {{ 'active' if news_type == 'rental' else '' }}">租赁</a>
+        <a href="{{ url_for('common.news', news_type='maintenance') }}" class="btn btn-outline-success {{ 'active' if news_type == 'maintenance' else '' }}">维修</a>
+        <a href="{{ url_for('common.news', news_type='announcement') }}" class="btn btn-outline-success {{ 'active' if news_type == 'announcement' else '' }}">公告</a>
+    </div>
+
+    <div class="news-feed-list">
+        {% for item in news.items %}
+        <a href="{{ url_for('common.news_detail', news_id=item.id) }}" class="news-feed-card">
+            <div class="tweet-author-row">
+                <div class="tweet-avatar">{{ item.author.username[0].upper() }}</div>
+                <div>
+                    <div class="tweet-author-name">{{ item.author.username }}</div>
+                    <div class="tweet-meta">{{ item.created_at.strftime('%m-%d %H:%M') }} · {{ news_type_labels.get(item.news_type, item.news_type) }}</div>
+                </div>
+            </div>
+            <div class="news-feed-body">
+                <div>
+                    <h2>{{ item.title }}</h2>
+                    <p>{{ item.content[:130] }}{% if item.content|length > 130 %}...{% endif %}</p>
+                </div>
+                {% if item.cover_image %}
+                <img src="{{ item.cover_image }}" alt="{{ item.title }} 封面图">
+                {% endif %}
+            </div>
+        </a>
+        {% else %}
+        <div class="alert alert-info text-center">暂无新闻公告</div>
+        {% endfor %}
+    </div>
+
+    {% if news.pages > 1 %}
+    <nav class="mt-4"><ul class="pagination pagination-sm justify-content-center">
+        {% if news.has_prev %}<li class="page-item"><a class="page-link" href="{{ url_for('common.news', page=news.prev_num, news_type=news_type) }}">上一页</a></li>{% endif %}
+        <li class="page-item disabled"><span class="page-link">{{ news.page }} / {{ news.pages }}</span></li>
+        {% if news.has_next %}<li class="page-item"><a class="page-link" href="{{ url_for('common.news', page=news.next_num, news_type=news_type) }}">下一页</a></li>{% endif %}
+    </ul></nav>
+    {% endif %}
+</div>
+{% endblock %}

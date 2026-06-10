@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}合同详情 - 房东中心{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">租赁合同详情</h5>
+                </div>
+                <div class="card-body">
+                    <h4>{{ lease.property.title }}</h4>
+                    <p class="text-muted">{{ lease.property.get_location() }}{{ lease.property.address }}</p>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>租客：</strong>{{ lease.tenant.username }}</p>
+                            <p><strong>租客电话：</strong>{{ lease.tenant.phone or '-' }}</p>
+                            <p><strong>租客邮箱：</strong>{{ lease.tenant.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>月租金：</strong>¥{{ lease.monthly_rent }}</p>
+                            <p><strong>押金：</strong>¥{{ lease.deposit_amount }}</p>
+                            <p><strong>租期：</strong>{{ lease.start_date.strftime('%Y-%m-%d') }} 至 {{ lease.end_date.strftime('%Y-%m-%d') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>状态：</strong>
+                        {% if lease.status == 'active' %}
+                        <span class="badge bg-success">已生效</span>
+                        {% elif lease.status == 'pending' %}
+                        <span class="badge bg-warning">等待租客签署</span>
+                        {% elif lease.status == 'completed' %}
+                        <span class="badge bg-secondary">已完成</span>
+                        {% else %}
+                        <span class="badge bg-danger">{{ lease.status }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>租客签署：</strong>
+                        {% if lease.is_signed %}
+                        <span class="badge bg-success">已签署</span>
+                        <span class="text-muted">{{ lease.sign_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                        {% else %}
+                        <span class="badge bg-warning">未签署</span>
+                        {% endif %}
+                    </div>
+
+                    {% if lease.contract_content %}
+                    <hr>
+                    <h5>合同内容</h5>
+                    <div class="bg-light p-3" style="white-space: pre-wrap;">{{ lease.contract_content }}</div>
+                    {% endif %}
+
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">合同账单</h5>
+                        {% if lease.status in ['active', 'pending'] %}
+                        <a href="{{ url_for('landlord.create_payment', lease_id=lease.id) }}" class="btn btn-sm btn-primary">发起账单</a>
+                        {% endif %}
+                    </div>
+                    {% if payments %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>周期</th>
+                                    <th>金额</th>
+                                    <th>截止日</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.payment_period or '-' }}</td>
+                                    <td>¥{{ payment.amount }}</td>
+                                    <td>{{ payment.due_date.strftime('%Y-%m-%d') if payment.due_date else '-' }}</td>
+                                    <td>
+                                        {% if payment.status == 'completed' %}
+                                        <span class="badge bg-success">已完成</span>
+                                        {% elif payment.status == 'submitted' %}
+                                        <span class="badge bg-info">待确认收款</span>
+                                        {% elif payment.status == 'pending' %}
+                                        <span class="badge bg-warning">待租客支付</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">已逾期</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payment.status == 'submitted' %}
+                                        <form method="post" action="{{ url_for('landlord.confirm_payment', payment_id=payment.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-success">确认收款</button>
+                                        </form>
+                                        {% elif payment.tenant_payment_proof %}
+                                        <a href="{{ payment.tenant_payment_proof }}" target="_blank" class="btn btn-sm btn-outline-secondary">查看凭证</a>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">暂无合同账单</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">操作</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('landlord.leases') }}" class="btn btn-secondary w-100 mb-2">返回合同列表</a>
+                    {% if lease.status in ['active', 'pending'] %}
+                    <a href="{{ url_for('landlord.create_payment', lease_id=lease.id) }}" class="btn btn-success w-100 mb-2">发起账单</a>
+                    {% endif %}
+                    <a href="{{ url_for('landlord.conversation_home') }}" class="btn btn-primary w-100">查看消息</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

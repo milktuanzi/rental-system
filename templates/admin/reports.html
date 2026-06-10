@@ -1,127 +1,32 @@
 {% extends 'base.html' %}
 
-{% block title %}系统报表{% endblock %}
+{% block title %}系统报表 - 管理后台{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-6">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card shadow-lg">
-                <div class="card-header bg-gradient-to-r from-green-600 to-emerald-500 text-white">
-                    <h4 class="mb-0">系统报表</h4>
-                </div>
-                <div class="card-body">
-                    <!-- 统计卡片 -->
-                    <div class="row mb-6">
-                        <div class="col-md-3">
-                            <div class="card bg-primary text-white">
-                                <div class="card-body text-center">
-                                    <div class="text-3xl font-bold">{{ new_users_30days }}</div>
-                                    <div class="text-white/80">30天新增用户</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card bg-success text-white">
-                                <div class="card-body text-center">
-                                    <div class="text-3xl font-bold">{{ property_stats.total }}</div>
-                                    <div class="text-white/80">总房源数</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card bg-info text-white">
-                                <div class="card-body text-center">
-                                    <div class="text-3xl font-bold">{{ lease_stats.active }}</div>
-                                    <div class="text-white/80">活跃租赁</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card bg-warning text-white">
-                                <div class="card-body text-center">
-                                    <div class="text-3xl font-bold">{{ complaint_stats.pending }}</div>
-                                    <div class="text-white/80">待处理投诉</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 房源状态统计 -->
-                    <div class="card mb-6">
-                        <div class="card-header">
-                            <h5 class="text-gray-700">房源状态分布</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-3 text-center">
-                                    <div class="text-4xl font-bold text-success">{{ property_stats.available }}</div>
-                                    <div class="text-gray-500">空置</div>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <div class="text-4xl font-bold text-info">{{ property_stats.rented }}</div>
-                                    <div class="text-gray-500">已出租</div>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <div class="text-4xl font-bold text-warning">{{ property_stats.maintenance }}</div>
-                                    <div class="text-gray-500">维修中</div>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <div class="text-4xl font-bold text-gray-600">{{ property_stats.total }}</div>
-                                    <div class="text-gray-500">总计</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 租赁状态统计 -->
-                    <div class="card mb-6">
-                        <div class="card-header">
-                            <h5 class="text-gray-700">租赁状态分布</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4 text-center">
-                                    <div class="text-4xl font-bold text-success">{{ lease_stats.active }}</div>
-                                    <div class="text-gray-500">进行中</div>
-                                </div>
-                                <div class="col-md-4 text-center">
-                                    <div class="text-4xl font-bold text-warning">{{ lease_stats.pending }}</div>
-                                    <div class="text-gray-500">待确认</div>
-                                </div>
-                                <div class="col-md-4 text-center">
-                                    <div class="text-4xl font-bold text-gray-600">{{ lease_stats.completed }}</div>
-                                    <div class="text-gray-500">已完成</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 投诉状态统计 -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="text-gray-700">投诉处理状态</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4 text-center">
-                                    <div class="text-4xl font-bold text-danger">{{ complaint_stats.pending }}</div>
-                                    <div class="text-gray-500">待处理</div>
-                                </div>
-                                <div class="col-md-4 text-center">
-                                    <div class="text-4xl font-bold text-warning">{{ complaint_stats.under_review }}</div>
-                                    <div class="text-gray-500">处理中</div>
-                                </div>
-                                <div class="col-md-4 text-center">
-                                    <div class="text-4xl font-bold text-success">{{ complaint_stats.resolved }}</div>
-                                    <div class="text-gray-500">已解决</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="mb-1">系统报表</h1>
+            <p class="text-muted mb-0">平台用户、房源、合同和任务处理概览。</p>
         </div>
+        <a href="{{ url_for('admin.export_reports') }}" class="btn btn-success btn-sm">导出文本报表</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted">30 天新增用户</div><div class="display-6 fw-bold text-success">{{ stats.new_users_30days }}</div></div></div></div>
+        <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted">30 天新增房源</div><div class="display-6 fw-bold text-success">{{ stats.new_properties_30days }}</div></div></div></div>
+        <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted">活跃月租合计</div><div class="display-6 fw-bold text-success">¥{{ stats.total_rent|round|int }}</div></div></div></div>
+        <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted">已支付账单</div><div class="display-6 fw-bold text-success">¥{{ stats.paid_amount|round|int }}</div></div></div></div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-4"><div class="card h-100"><div class="card-header bg-white fw-bold">用户</div><div class="list-group list-group-flush"><div class="list-group-item d-flex justify-content-between"><span>总数</span><strong>{{ stats.users.total }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>租客</span><strong>{{ stats.users.tenant }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>房东</span><strong>{{ stats.users.landlord }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>管理员</span><strong>{{ stats.users.admin }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>禁用</span><strong>{{ stats.users.disabled }}</strong></div></div></div></div>
+        <div class="col-lg-4"><div class="card h-100"><div class="card-header bg-white fw-bold">房源</div><div class="list-group list-group-flush"><div class="list-group-item d-flex justify-content-between"><span>总数</span><strong>{{ stats.property_stats.total }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>可租</span><strong>{{ stats.property_stats.available }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已出租</span><strong>{{ stats.property_stats.rented }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>维修中</span><strong>{{ stats.property_stats.maintenance }}</strong></div></div></div></div>
+        <div class="col-lg-4"><div class="card h-100"><div class="card-header bg-white fw-bold">合同</div><div class="list-group list-group-flush"><div class="list-group-item d-flex justify-content-between"><span>总数</span><strong>{{ stats.leases.total }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>待签署</span><strong>{{ stats.leases.pending }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>生效中</span><strong>{{ stats.leases.active }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已完成</span><strong>{{ stats.leases.completed }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已终止</span><strong>{{ stats.leases.terminated }}</strong></div></div></div></div>
+        <div class="col-lg-4"><div class="card h-100"><div class="card-header bg-white fw-bold">预约</div><div class="list-group list-group-flush"><div class="list-group-item d-flex justify-content-between"><span>待确认</span><strong>{{ stats.appointments.pending }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已确认</span><strong>{{ stats.appointments.confirmed }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已完成</span><strong>{{ stats.appointments.completed }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已取消</span><strong>{{ stats.appointments.cancelled }}</strong></div></div></div></div>
+        <div class="col-lg-4"><div class="card h-100"><div class="card-header bg-white fw-bold">维修</div><div class="list-group list-group-flush"><div class="list-group-item d-flex justify-content-between"><span>待处理</span><strong>{{ stats.repairs.pending }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>处理中</span><strong>{{ stats.repairs.in_progress }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已完成</span><strong>{{ stats.repairs.completed }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已驳回</span><strong>{{ stats.repairs.rejected }}</strong></div></div></div></div>
+        <div class="col-lg-4"><div class="card h-100"><div class="card-header bg-white fw-bold">投诉</div><div class="list-group list-group-flush"><div class="list-group-item d-flex justify-content-between"><span>待处理</span><strong>{{ stats.complaints.pending }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>处理中</span><strong>{{ stats.complaints.under_review }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已解决</span><strong>{{ stats.complaints.resolved }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已驳回</span><strong>{{ stats.complaints.rejected }}</strong></div></div></div></div>
+        <div class="col-lg-4"><div class="card h-100"><div class="card-header bg-white fw-bold">账单</div><div class="list-group list-group-flush"><div class="list-group-item d-flex justify-content-between"><span>总数</span><strong>{{ stats.payments.total }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>待支付</span><strong>{{ stats.payments.pending }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已支付</span><strong>{{ stats.payments.completed }}</strong></div><div class="list-group-item d-flex justify-content-between"><span>已逾期</span><strong>{{ stats.payments.overdue }}</strong></div></div></div></div>
     </div>
 </div>
 {% endblock %}

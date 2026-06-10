@@ -1,62 +1,74 @@
 {% extends 'base.html' %}
 
-{% block title %}发布新闻{% endblock %}
+{% block title %}{{ page_title or '发布公告' }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-6">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card shadow-lg">
-                <div class="card-header bg-gradient-to-r from-green-600 to-emerald-500 text-white">
-                    <h4 class="mb-0">发布新闻</h4>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('landlord.add_news') }}">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="form-group">
-                            {{ form.title.label(class='form-label') }}
-                            {{ form.title(class='form-control') }}
-                            {% if form.title.errors %}
-                            <div class="text-danger">
-                                {% for error in form.title.errors %}
-                                <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="form-group">
-                            {{ form.news_type.label(class='form-label') }}
-                            {{ form.news_type(class='form-control') }}
-                            {% if form.news_type.errors %}
-                            <div class="text-danger">
-                                {% for error in form.news_type.errors %}
-                                <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="form-group">
-                            {{ form.content.label(class='form-label') }}
-                            {{ form.content(class='form-control', rows=6) }}
-                            {% if form.content.errors %}
-                            <div class="text-danger">
-                                {% for error in form.content.errors %}
-                                <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-success btn-lg btn-block">发布新闻</button>
-                        </div>
-                    </form>
-                </div>
+<div class="tweet-editor-page py-4">
+    <div class="tweet-editor-card">
+        <div class="tweet-editor-head">
+            <div class="tweet-avatar">{{ current_user.username[0].upper() }}</div>
+            <div>
+                <h1>{{ page_title or '发布公告' }}</h1>
+                <p>{{ current_user.username }} · 以动态形式发布给租客查看</p>
             </div>
         </div>
+
+        <form method="POST" action="{{ url_for('landlord.edit_news', news_id=news.id) if news is defined else url_for('landlord.add_news') }}" enctype="multipart/form-data" class="tweet-editor-form">
+            {{ form.hidden_tag() }}
+
+            <div class="tweet-field">
+                {{ form.title(class='tweet-title-input', placeholder='写一个清晰的新闻标题') }}
+                {% if form.title.errors %}
+                <div class="text-danger small mt-1">{% for error in form.title.errors %}{{ error }}{% endfor %}</div>
+                {% endif %}
+            </div>
+
+            <div class="tweet-field tweet-inline-field">
+                <span>类型</span>
+                {{ form.news_type(class='form-select form-select-sm') }}
+            </div>
+
+            <div class="tweet-field">
+                {{ form.content(class='tweet-content-input', rows=9, placeholder='像发布推文一样写公告内容，支持换行。') }}
+                {% if form.content.errors %}
+                <div class="text-danger small mt-1">{% for error in form.content.errors %}{{ error }}{% endfor %}</div>
+                {% endif %}
+            </div>
+
+            {% if news is defined and news.cover_image %}
+            <div class="tweet-media-preview tweet-cover-preview">
+                <span>当前封面</span>
+                <img src="{{ news.cover_image }}" alt="当前封面图">
+            </div>
+            {% endif %}
+
+            {% if news is defined and news.content_images %}
+            <div class="tweet-media-preview">
+                <span>已有内容图</span>
+                <div class="tweet-image-grid">
+                    {% for image in news.content_images %}
+                    <img src="{{ image }}" alt="内容图 {{ loop.index }}">
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="tweet-upload-row">
+                <label class="tweet-upload-button">
+                    <span>设置封面图</span>
+                    {{ form.cover_image(class='visually-hidden', accept='image/*') }}
+                </label>
+                <label class="tweet-upload-button">
+                    <span>加入内容图</span>
+                    {{ form.content_images(class='visually-hidden', accept='image/*', multiple=True) }}
+                </label>
+            </div>
+
+            <div class="tweet-editor-actions">
+                <a href="{{ url_for('landlord.news') }}" class="btn btn-outline-secondary btn-sm">返回列表</a>
+                <button type="submit" class="btn btn-success btn-sm px-4">{{ submit_text or '发布' }}</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

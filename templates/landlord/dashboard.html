@@ -38,26 +38,9 @@
         <div class="col-md-3 mb-3">
             <div class="card bg-info text-white">
                 <div class="card-body">
-                    <h5 class="card-title">未读消息</h5>
+                    <h5 class="card-title">消息中心</h5>
                     <p class="display-4">{{ unread_messages }}</p>
-                    <a href="{{ url_for('landlord.messages') }}" class="text-white">查看消息 →</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 快速操作 -->
-    <div class="row mb-5">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">快速操作</h5>
-                </div>
-                <div class="card-body">
-                    <a href="{{ url_for('landlord.add_property') }}" class="btn btn-primary">+ 发布新房源</a>
-                    <a href="{{ url_for('landlord.add_news') }}" class="btn btn-info">+ 发布新闻</a>
-                    <a href="{{ url_for('landlord.appointments') }}" class="btn btn-success">📅 预约管理</a>
-                    <a href="{{ url_for('landlord.reports') }}" class="btn btn-secondary">查看报表</a>
+                    <a href="{{ url_for('landlord.conversation_home') }}" class="text-white">查看会话 →</a>
                 </div>
             </div>
         </div>
@@ -85,7 +68,7 @@
                     <ul class="list-unstyled">
                         <li>待处理维修申请: {{ pending_repairs }} 个</li>
                         <li>待确认预约: {{ pending_appointments }} 个</li>
-                        <li>未读消息: {{ unread_messages }} 条</li>
+                        <li>消息中心未读: {{ unread_messages }} 条</li>
                     </ul>
                     {% if pending_appointments > 0 %}
                     <a href="{{ url_for('landlord.appointments', status='pending') }}" class="btn btn-sm btn-success mt-2">处理预约</a>
@@ -193,4 +176,3 @@
     }, 30000); // 每30秒检查一次
 </script>
 {% endblock %}
-

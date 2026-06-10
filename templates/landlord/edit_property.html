@@ -94,11 +94,12 @@
                             </div>
                         </div>
 
+                        {% set selected_province = form.province.data or '' %}
+                        {% set selected_city = form.city.data or '' %}
+                        {% set selected_district = form.district.data or '' %}
+                        {% include 'includes/location_selects.html' %}
+
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ form.district.label(class="form-label") }}
-                                {{ form.district(class="form-control") }}
-                            </div>
                             <div class="col-md-6 mb-3">
                                 {{ form.property_type.label(class="form-label") }}
                                 {{ form.property_type(class="form-select") }}
@@ -454,4 +455,5 @@
     // 初始化
     updateImageCount();
 </script>
+{% include 'includes/location_selects_script.html' %}
 {% endblock %}

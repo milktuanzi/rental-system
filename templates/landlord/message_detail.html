@@ -77,7 +77,7 @@
 <div class="container py-4 message-detail-container">
     <!-- 返回按钮 -->
     <div class="mb-4">
-        <a href="{{ url_for('landlord.messages') }}" class="btn btn-secondary back-btn">
+        <a href="{{ url_for('landlord.conversation_home') }}" class="btn btn-secondary back-btn">
             <i class="fa fa-arrow-left"></i> 返回消息列表
         </a>
     </div>
@@ -127,7 +127,7 @@
 
     <!-- 操作按钮 -->
     <div class="mt-4 d-flex gap-2">
-        <a href="{{ url_for('landlord.messages') }}" class="btn btn-primary flex-1">
+        <a href="{{ url_for('landlord.conversation_home') }}" class="btn btn-primary flex-1">
             <i class="fa fa-inbox"></i> 返回消息列表
         </a>
         <button type="button" class="btn btn-outline-secondary" onclick="goBack()">

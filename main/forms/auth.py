@@ -7,22 +7,46 @@ from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationE
 from main.models.user import User
 
 
+class ChineseSelectField(SelectField):
+    """将下拉框无效选项提示改为中文。"""
+    def pre_validate(self, form):
+        try:
+            super().pre_validate(form)
+        except ValidationError as exc:
+            raise ValidationError('请选择有效选项') from exc
+
+
 class LoginForm(FlaskForm):
     """登录表单"""
-    username = StringField('用户名', validators=[DataRequired()])
-    password = PasswordField('密码', validators=[DataRequired()])
+    username = StringField('用户名', validators=[DataRequired(message='请输入用户名')])
+    password = PasswordField('密码', validators=[DataRequired(message='请输入密码')])
     remember_me = BooleanField('记住我')
     submit = SubmitField('登录')
 
 
 class RegisterForm(FlaskForm):
     """注册表单"""
-    username = StringField('用户名', validators=[DataRequired(), Length(min=3, max=80)])
-    email = StringField('邮箱', validators=[DataRequired(), Email()])
-    password = PasswordField('密码', validators=[DataRequired(), Length(min=6)])
-    confirm_password = PasswordField('确认密码', validators=[DataRequired(), EqualTo('password')])
-    phone = StringField('手机号', validators=[DataRequired(), Length(min=11, max=11)])
-    user_type = SelectField('用户类型', choices=[('tenant', '租客'), ('landlord', '房东')])
+    username = StringField('用户名', validators=[
+        DataRequired(message='请输入用户名'),
+        Length(min=3, max=80, message='用户名长度必须在3到80个字符之间')
+    ])
+    email = StringField('邮箱', validators=[
+        DataRequired(message='请输入邮箱'),
+        Email(message='请输入有效的邮箱地址')
+    ])
+    password = PasswordField('密码', validators=[
+        DataRequired(message='请输入密码'),
+        Length(min=6, message='密码长度至少为6位')
+    ])
+    confirm_password = PasswordField('确认密码', validators=[
+        DataRequired(message='请再次输入密码'),
+        EqualTo('password', message='两次输入的密码不一致')
+    ])
+    phone = StringField('手机号', validators=[
+        DataRequired(message='请输入手机号'),
+        Length(min=11, max=11, message='手机号必须为11位')
+    ])
+    user_type = ChineseSelectField('用户类型', choices=[('tenant', '租客'), ('landlord', '房东')])
     submit = SubmitField('注册')
 
     def validate_username(self, field):
@@ -43,16 +67,28 @@ class RegisterForm(FlaskForm):
 
 class ResetPasswordForm(FlaskForm):
     """重置密码表单"""
-    password = PasswordField('新密码', validators=[DataRequired(), Length(min=6)])
-    confirm_password = PasswordField('确认密码', validators=[DataRequired(), EqualTo('password')])
+    password = PasswordField('新密码', validators=[
+        DataRequired(message='请输入新密码'),
+        Length(min=6, message='密码长度至少为6位')
+    ])
+    confirm_password = PasswordField('确认密码', validators=[
+        DataRequired(message='请再次输入密码'),
+        EqualTo('password', message='两次输入的密码不一致')
+    ])
     submit = SubmitField('重置密码')
 
 
 class ProfileForm(FlaskForm):
     """用户信息更改表单"""
-    username = StringField('用户名', validators=[DataRequired(), Length(min=3, max=80)])
-    email = StringField('邮箱', validators=[DataRequired(), Email()])
-    phone = StringField('手机号', validators=[Length(min=11, max=11)])
+    username = StringField('用户名', validators=[
+        DataRequired(message='请输入用户名'),
+        Length(min=3, max=80, message='用户名长度必须在3到80个字符之间')
+    ])
+    email = StringField('邮箱', validators=[
+        DataRequired(message='请输入邮箱'),
+        Email(message='请输入有效的邮箱地址')
+    ])
+    phone = StringField('手机号', validators=[Length(min=11, max=11, message='手机号必须为11位')])
     bio = StringField('个人简介')
     submit = SubmitField('确认更改')
 
@@ -80,9 +116,15 @@ class ProfileForm(FlaskForm):
 
 class ChangePasswordForm(FlaskForm):
     """密码修改表单"""
-    current_password = PasswordField('当前密码', validators=[DataRequired()])
-    new_password = PasswordField('新密码', validators=[DataRequired(), Length(min=8)])
-    confirm_password = PasswordField('确认新密码', validators=[DataRequired(), EqualTo('new_password', message='两次输入的密码不一致')])
+    current_password = PasswordField('当前密码', validators=[DataRequired(message='请输入当前密码')])
+    new_password = PasswordField('新密码', validators=[
+        DataRequired(message='请输入新密码'),
+        Length(min=8, message='密码长度至少为8位')
+    ])
+    confirm_password = PasswordField('确认新密码', validators=[
+        DataRequired(message='请再次输入新密码'),
+        EqualTo('new_password', message='两次输入的密码不一致')
+    ])
     submit = SubmitField('确认修改')
 
     def __init__(self, user, *args, **kwargs):
@@ -109,4 +151,3 @@ class ChangePasswordForm(FlaskForm):
         # 检查是否包含字母
         if not any(char.isalpha() for char in password):
             raise ValidationError('密码必须包含至少一个字母')
-

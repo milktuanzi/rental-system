@@ -26,6 +26,21 @@
                         {{ form.hidden_tag() }}
 
                         <div class="mb-3">
+                            <label class="form-label">投诉关联房源</label>
+                            <select name="property_id" class="form-select" required>
+                                <option value="">请选择当前租赁中的房源</option>
+                                {% for lease in active_leases %}
+                                <option value="{{ lease.property_id }}">
+                                    {{ lease.property.title }} (房东：{{ lease.property.landlord.username }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if not active_leases %}
+                            <div class="text-danger small mt-1">您当前没有可投诉的活跃租赁房源。</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label">{{ form.title.label.text }}</label>
                             {{ form.title(class="form-control", placeholder="请输入投诉标题") }}
                             {% if form.title.errors %}
@@ -57,7 +72,7 @@
 
                         <div class="d-flex justify-content-between">
                             <a href="{{ url_for('tenant.complaints') }}" class="btn btn-secondary">返回列表</a>
-                            {{ form.submit(class="btn btn-danger") }}
+                            {{ form.submit(class="btn btn-danger", disabled=(not active_leases)) }}
                         </div>
                     </form>
                 </div>

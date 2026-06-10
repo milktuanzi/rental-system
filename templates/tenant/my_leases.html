@@ -16,7 +16,7 @@
 
                     <p class="mb-2">
                         <strong>房东:</strong> {{ lease.property.landlord.username }}<br>
-                        <strong>地址:</strong> {{ lease.property.address }}<br>
+                        <strong>地址:</strong> {{ lease.property.get_location() }}{{ lease.property.address }}<br>
                         <strong>户型:</strong> {{ lease.property.get_room_format() }}<br>
                         <strong>月租金:</strong> ¥{{ lease.monthly_rent }}
                     </p>
@@ -29,7 +29,7 @@
                     <p class="mb-2">
                         <strong>状态:</strong>
                         {% if lease.status == 'active' %}
-                        <span class="badge bg-success">活跃</span>
+                        <span class="badge bg-success">已生效</span>
                         {% elif lease.status == 'pending' %}
                         <span class="badge bg-warning">待签署</span>
                         {% elif lease.status == 'completed' %}
@@ -84,4 +84,3 @@
     {% endif %}
 </div>
 {% endblock %}
-

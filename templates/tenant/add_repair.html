@@ -19,7 +19,7 @@
                                 <option value="">请选择需要维修的房源</option>
                                 {% for lease in active_leases %}
                                 <option value="{{ lease.property_id }}">
-                                    {{ lease.property.title }} ({{ lease.property.address }})
+                                    {{ lease.property.title }} ({{ lease.property.get_location() }}{{ lease.property.address }})
                                 </option>
                                 {% endfor %}
                             </select>

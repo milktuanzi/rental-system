@@ -21,6 +21,11 @@ class Repair(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     completed_at = db.Column(db.DateTime, nullable=True)
 
+    @property
+    def tenant(self):
+        """兼容模板中 repair.tenant 的读取。"""
+        return self.tenant_obj
+
     def is_pending(self):
         """是否待处理"""
         return self.status == 'pending'
@@ -31,4 +36,3 @@ class Repair(db.Model):
 
     def __repr__(self):
         return f'<Repair {self.id}>'
-

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}支付账单 - 租客中心{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-3">支付账单</h1>
+    <div class="row g-3">
+        <div class="col-lg-5"><div class="card h-100"><div class="card-body"><h5>房东收款码</h5>{% if payment.landlord_qr_code %}<img src="{{ payment.landlord_qr_code }}" class="img-fluid rounded border" alt="房东收款码">{% else %}<div class="alert alert-warning">房东尚未上传收款码</div>{% endif %}</div></div></div>
+        <div class="col-lg-7"><div class="card h-100"><div class="card-body"><div class="alert alert-light border">{{ payment.lease.property.title }} · {{ payment.payment_period or '-' }} · ¥{{ payment.amount|round|int }}</div><form method="post" enctype="multipart/form-data">{{ form.hidden_tag() }}<div class="mb-3"><label class="form-label">{{ form.payment_method.label.text }}</label>{{ form.payment_method(class="form-control", placeholder="例如 微信 / 支付宝 / 银行转账") }}</div><div class="mb-3"><label class="form-label">{{ form.transaction_id.label.text }}</label>{{ form.transaction_id(class="form-control", placeholder="可选") }}</div><div class="mb-3"><label class="form-label">{{ form.tenant_payment_proof.label.text }}</label>{{ form.tenant_payment_proof(class="form-control", accept="image/*") }}{% for error in form.tenant_payment_proof.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div><button class="btn btn-success">提交支付凭证</button><a href="{{ url_for('tenant.payments') }}" class="btn btn-outline-secondary ms-2">返回账单</a></form></div></div></div>
+    </div>
+</div>
+{% endblock %}

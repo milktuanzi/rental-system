@@ -64,6 +64,9 @@
                                 </form>
                                 {% else %}
                                 <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#detailModal{{ appointment.id }}">详情</button>
+                                {% if appointment.status == 'confirmed' and appointment.property.status == 'available' %}
+                                <a href="{{ url_for('landlord.create_lease_from_appointment', appointment_id=appointment.id) }}" class="btn btn-sm btn-primary">发起合同</a>
+                                {% endif %}
                                 {% endif %}
                             </td>
                         </tr>
@@ -134,6 +137,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    {% if appointment.status == 'confirmed' and appointment.property.status == 'available' %}
+                    <a href="{{ url_for('landlord.create_lease_from_appointment', appointment_id=appointment.id) }}" class="btn btn-primary">发起合同</a>
+                    {% endif %}
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
                 </div>
             </div>

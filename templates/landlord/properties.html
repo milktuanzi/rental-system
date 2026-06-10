@@ -29,7 +29,7 @@
                     <td>
                         <strong>{{ prop.title }}</strong>
                     </td>
-                    <td>{{ prop.address }}</td>
+                    <td>{{ prop.get_location() }}{{ prop.address }}</td>
                     <td>{{ prop.get_room_format() }}</td>
                     <td>¥{{ prop.price }}/月</td>
                     <td>

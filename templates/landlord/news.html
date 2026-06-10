@@ -12,9 +12,17 @@
                 </div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-4">
-                        <h5 class="text-gray-700">我的新闻</h5>
+                        <div>
+                            <h5 class="text-gray-700 mb-2">我的公告</h5>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('landlord.news') }}" class="btn btn-outline-secondary {{ 'active' if not news_type else '' }}">全部</a>
+                                <a href="{{ url_for('landlord.news', news_type='rental') }}" class="btn btn-outline-secondary {{ 'active' if news_type == 'rental' else '' }}">租赁相关</a>
+                                <a href="{{ url_for('landlord.news', news_type='maintenance') }}" class="btn btn-outline-secondary {{ 'active' if news_type == 'maintenance' else '' }}">维修相关</a>
+                                <a href="{{ url_for('landlord.news', news_type='announcement') }}" class="btn btn-outline-secondary {{ 'active' if news_type == 'announcement' else '' }}">公告</a>
+                            </div>
+                        </div>
                         <a href="{{ url_for('landlord.add_news') }}" class="btn btn-success btn-sm">
-                            <i class="fa fa-plus"></i> 发布新闻
+                            <i class="fa fa-plus"></i> 发布公告
                         </a>
                     </div>
                     
@@ -25,7 +33,9 @@
                                 <tr>
                                     <th>标题</th>
                                     <th>类型</th>
+                                    <th>状态</th>
                                     <th>发布时间</th>
+                                    <th>更新时间</th>
                                     <th>操作</th>
                                 </tr>
                             </thead>
@@ -33,11 +43,22 @@
                                 {% for item in news.items %}
                                 <tr>
                                     <td>{{ item.title }}</td>
-                                    <td>{{ item.news_type }}</td>
-                                    <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ news_type_labels.get(item.news_type, item.news_type) }}</td>
                                     <td>
-                                        <a href="#" class="btn btn-info btn-xs">编辑</a>
-                                        <form action="#" method="POST" class="d-inline">
+                                        {% if item.is_published %}
+                                        <span class="badge bg-success">已发布</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">未发布</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ item.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('landlord.edit_news', news_id=item.id) }}" class="btn btn-info btn-sm">编辑</a>
+                                        <form action="{{ url_for('landlord.toggle_news', news_id=item.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-warning btn-sm">{{ '下架' if item.is_published else '发布' }}</button>
+                                        </form>
+                                        <form action="{{ url_for('landlord.delete_news', news_id=item.id) }}" method="POST" class="d-inline">
                                             <button type="submit" class="btn btn-danger btn-xs" onclick="return confirm('确定删除？')">删除</button>
                                         </form>
                                     </td>
@@ -53,17 +74,21 @@
                         <ul class="pagination justify-content-center">
                             {% if news.has_prev %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('landlord.news', page=news.prev_num) }}">上一页</a>
+                                <a class="page-link" href="{{ url_for('landlord.news', page=news.prev_num, news_type=news_type) }}">上一页</a>
                             </li>
                             {% endif %}
                             {% for page in news.iter_pages() %}
+                            {% if page %}
                             <li class="page-item {% if page == news.page %}active{% endif %}">
-                                <a class="page-link" href="{{ url_for('landlord.news', page=page) }}">{{ page }}</a>
+                                <a class="page-link" href="{{ url_for('landlord.news', page=page, news_type=news_type) }}">{{ page }}</a>
                             </li>
+                            {% else %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
                             {% endfor %}
                             {% if news.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('landlord.news', page=news.next_num) }}">下一页</a>
+                                <a class="page-link" href="{{ url_for('landlord.news', page=news.next_num, news_type=news_type) }}">下一页</a>
                             </li>
                             {% endif %}
                         </ul>
@@ -72,8 +97,8 @@
                     {% else %}
                     <div class="text-center py-8">
                         <i class="fa fa-newspaper-o text-gray-400" style="font-size: 4rem;"></i>
-                        <p class="text-gray-500 mt-3">暂无新闻</p>
-                        <a href="{{ url_for('landlord.add_news') }}" class="btn btn-success">发布第一条新闻</a>
+                        <p class="text-gray-500 mt-3">暂无公告</p>
+                        <a href="{{ url_for('landlord.add_news') }}" class="btn btn-success">发布第一条公告</a>
                     </div>
                     {% endif %}
                 </div>

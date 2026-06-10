@@ -4,7 +4,16 @@
 
 {% block content %}
 <div class="container py-4">
-    <h2 class="mb-4">维修申请管理</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">维修申请管理</h2>
+        <div class="btn-group">
+            <a href="{{ url_for('landlord.repairs') }}" class="btn btn-outline-secondary {{ 'active' if not status else '' }}">全部</a>
+            <a href="{{ url_for('landlord.repairs', status='pending') }}" class="btn btn-outline-warning {{ 'active' if status == 'pending' else '' }}">待处理 {{ repair_stats.pending }}</a>
+            <a href="{{ url_for('landlord.repairs', status='in_progress') }}" class="btn btn-outline-primary {{ 'active' if status == 'in_progress' else '' }}">处理中 {{ repair_stats.in_progress }}</a>
+            <a href="{{ url_for('landlord.repairs', status='completed') }}" class="btn btn-outline-success {{ 'active' if status == 'completed' else '' }}">已完成 {{ repair_stats.completed }}</a>
+            <a href="{{ url_for('landlord.repairs', status='rejected') }}" class="btn btn-outline-danger {{ 'active' if status == 'rejected' else '' }}">已拒绝 {{ repair_stats.rejected }}</a>
+        </div>
+    </div>
 
     {% if repairs.items %}
     <div class="card">
@@ -18,6 +27,7 @@
                             <th>租客</th>
                             <th>优先级</th>
                             <th>状态</th>
+                            <th>最新处理</th>
                             <th>提交时间</th>
                             <th>操作</th>
                         </tr>
@@ -50,10 +60,17 @@
                                 <span class="badge bg-danger">已拒绝</span>
                                 {% endif %}
                             </td>
+                            <td>
+                                {% if repair.landlord_reply %}
+                                <span class="text-truncate d-inline-block" style="max-width: 180px;" title="{{ repair.landlord_reply }}">{{ repair.landlord_reply }}</span>
+                                {% else %}
+                                <span class="text-muted">暂无</span>
+                                {% endif %}
+                            </td>
                             <td>{{ repair.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#replyModal{{ repair.id }}">
-                                    回复
+                                    处理
                                 </button>
                             </td>
                         </tr>
@@ -68,13 +85,13 @@
                 <ul class="pagination justify-content-center">
                     {% if repairs.has_prev %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('landlord.repairs', page=repairs.prev_num) }}">上一页</a>
+                        <a class="page-link" href="{{ url_for('landlord.repairs', page=repairs.prev_num, status=status) }}">上一页</a>
                     </li>
                     {% endif %}
                     {% for page_num in repairs.iter_pages() %}
                     {% if page_num %}
                     <li class="page-item {{ 'active' if page_num == repairs.page else '' }}">
-                        <a class="page-link" href="{{ url_for('landlord.repairs', page=page_num) }}">{{ page_num }}</a>
+                        <a class="page-link" href="{{ url_for('landlord.repairs', page=page_num, status=status) }}">{{ page_num }}</a>
                     </li>
                     {% else %}
                     <li class="page-item disabled"><span class="page-link">...</span></li>
@@ -82,7 +99,7 @@
                     {% endfor %}
                     {% if repairs.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('landlord.repairs', page=repairs.next_num) }}">下一页</a>
+                        <a class="page-link" href="{{ url_for('landlord.repairs', page=repairs.next_num, status=status) }}">下一页</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -96,7 +113,7 @@
     <div class="modal fade" id="replyModal{{ repair.id }}" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form method="POST" action="{{ url_for('landlord.reply_repair', repair_id=repair.id) }}">
+                <form method="POST" action="{{ url_for('landlord.reply_repair', repair_id=repair.id, status=status) }}">
                     <div class="modal-header">
                         <h5 class="modal-title">回复维修申请</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -110,19 +127,31 @@
                             <label class="form-label">问题描述</label>
                             <p class="form-control-plaintext">{{ repair.description }}</p>
                         </div>
+                        {% if repair.landlord_reply %}
                         <div class="mb-3">
-                            <label class="form-label">回复内容</label>
-                            <textarea name="reply" class="form-control" rows="3" required></textarea>
+                            <label class="form-label">上次处理说明</label>
+                            <div class="alert alert-light border mb-0">{{ repair.landlord_reply }}</div>
+                        </div>
+                        {% endif %}
+                        <div class="mb-3">
+                            <label class="form-label">处理说明</label>
+                            <textarea name="reply" class="form-control" rows="3" required placeholder="说明处理方案、预约上门时间或拒绝原因">{{ repair.landlord_reply or '' }}</textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">处理状态</label>
                             <select name="status" class="form-select">
-                                <option value="pending">待处理</option>
-                                <option value="in_progress">处理中</option>
-                                <option value="completed">已完成</option>
-                                <option value="rejected">拒绝</option>
+                                <option value="pending" {{ 'selected' if repair.status == 'pending' else '' }}>待处理</option>
+                                <option value="in_progress" {{ 'selected' if repair.status == 'in_progress' else '' }}>处理中</option>
+                                <option value="completed" {{ 'selected' if repair.status == 'completed' else '' }}>已完成</option>
+                                <option value="rejected" {{ 'selected' if repair.status == 'rejected' else '' }}>拒绝</option>
                             </select>
                         </div>
+                        {% if repair.completed_at %}
+                        <div class="mb-3">
+                            <label class="form-label">完成时间</label>
+                            <p class="form-control-plaintext">{{ repair.completed_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>

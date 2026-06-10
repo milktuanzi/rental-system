@@ -1,131 +1,36 @@
 {% extends "base.html" %}
 
-{% block title %}我的消息 - 租客中心{% endblock %}
+{% block title %}消息 - 租客中心{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h2 class="mb-4">我的消息</h2>
-
-    {% if messages.items %}
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>发件人</th>
-                            <th>内容预览</th>
-                            <th>类型</th>
-                            <th>状态</th>
-                            <th>时间</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for message in messages.items %}
-                        <tr class="{{ 'table-light' if not message.is_read }}">
-                            <td>
-                                <strong>{{ message.sender.username }}</strong>
-                            </td>
-                            <td>{{ message.content[:50] }}{% if message.content|length > 50 %}...{% endif %}</td>
-                            <td>
-                                {% if message.message_type == 'notification' %}
-                                <span class="badge bg-info">通知</span>
-                                {% elif message.message_type == 'system' %}
-                                <span class="badge bg-secondary">系统</span>
-                                {% else %}
-                                <span class="badge bg-primary">消息</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if message.is_read %}
-                                <span class="badge bg-success">已读</span>
-                                {% else %}
-                                <span class="badge bg-warning text-dark">未读</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ message.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#messageModal{{ message.id }}">
-                                    查看
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- 分页 -->
-            {% if messages.pages > 1 %}
-            <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if messages.has_prev %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('tenant.messages', page=messages.prev_num) }}">上一页</a>
-                    </li>
-                    {% endif %}
-                    {% for page_num in messages.iter_pages() %}
-                    {% if page_num %}
-                    <li class="page-item {{ 'active' if page_num == messages.page else '' }}">
-                        <a class="page-link" href="{{ url_for('tenant.messages', page=page_num) }}">{{ page_num }}</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled"><span class="page-link">...</span></li>
-                    {% endif %}
-                    {% endfor %}
-                    {% if messages.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('tenant.messages', page=messages.next_num) }}">下一页</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
+<div class="message-list-page py-3">
+    {% if conversations %}
+    <aside class="message-list-panel">
+        <div class="message-list-head">
+            <span>会话</span>
+            {% if unread_messages_count > 0 %}<span class="message-list-count">{{ unread_messages_count }}</span>{% endif %}
         </div>
-    </div>
-
-    <!-- 消息详情模态框 -->
-    {% for message in messages.items %}
-    <div class="modal fade" id="messageModal{{ message.id }}" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        {% if message.message_type == 'notification' %}通知{% elif message.message_type == 'system' %}系统消息{% else %}消息{% endif %}
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <strong>发件人：</strong> {{ message.sender.username }}
-                    </div>
-                    <div class="mb-3">
-                        <strong>时间：</strong> {{ message.created_at.strftime('%Y-%m-%d %H:%M') }}
-                    </div>
-                    <hr>
-                    <div class="message-content">
-                        {{ message.content }}
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
-                    {% if not message.is_read %}
-                    <a href="{{ url_for('tenant.mark_message_read', message_id=message.id) }}" class="btn btn-primary">
-                        标记为已读
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
+        <div class="message-list-scroll">
+            {% for item in conversations %}
+            <a href="{{ item.url }}" class="message-list-item">
+                <span class="message-list-avatar">{{ item.user.username[0].upper() }}</span>
+                <span class="message-list-copy">
+                    <strong>{{ item.user.username }}{% if item.user.is_admin() %}<em>系统通知</em>{% endif %}</strong>
+                    <small>{% if item.last_message.sender_id == current_user.id %}我：{% endif %}{{ item.last_message.content[:72] }}{% if item.last_message.content|length > 72 %}...{% endif %}</small>
+                </span>
+                <span class="message-list-meta">
+                    <small>{{ item.last_message.created_at.strftime('%m-%d %H:%M') }}</small>
+                    {% if item.unread_count > 0 %}<b>{{ item.unread_count }}</b>{% endif %}
+                </span>
+            </a>
+            {% endfor %}
         </div>
-    </div>
-    {% endfor %}
-
+    </aside>
     {% else %}
     <div class="alert alert-info text-center py-5">
-        <i class="fa fa-envelope-o fa-3x mb-3 text-muted"></i>
-        <h5>暂无消息</h5>
-        <p>您还没有收到任何消息</p>
+        <h5>暂无会话</h5>
+        <p>您还没有和房东进行过沟通。</p>
+        <a href="{{ url_for('common.search') }}" class="btn btn-primary">去搜索房源</a>
     </div>
     {% endif %}
 </div>

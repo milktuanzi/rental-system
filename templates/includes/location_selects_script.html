@@ -1,0 +1,72 @@
+<script>
+(function() {
+    const blocks = document.querySelectorAll('.location-selects');
+    if (!blocks.length) return;
+
+    function option(value, selectedValue, placeholder) {
+        if (!value) return `<option value="">${placeholder}</option>`;
+        return `<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${value}</option>`;
+    }
+
+    function fetchLocations(params) {
+        const url = new URL("{{ url_for('common.get_locations') }}", window.location.origin);
+        Object.keys(params || {}).forEach(key => {
+            if (params[key]) url.searchParams.set(key, params[key]);
+        });
+        return fetch(url).then(response => response.json());
+    }
+
+    blocks.forEach(block => {
+        const provinceSelect = block.querySelector('.js-province');
+        const citySelect = block.querySelector('.js-city');
+        const districtSelect = block.querySelector('.js-district');
+        const selectedProvince = block.dataset.province || '';
+        const selectedCity = block.dataset.city || '';
+        const selectedDistrict = block.dataset.district || '';
+
+        function resetCity() {
+            citySelect.innerHTML = option('', '', '请选择城市');
+            citySelect.disabled = true;
+            resetDistrict();
+        }
+
+        function resetDistrict() {
+            districtSelect.innerHTML = option('', '', '请选择区县');
+            districtSelect.disabled = true;
+        }
+
+        function loadCities(province, selected) {
+            resetCity();
+            if (!province) return Promise.resolve();
+            return fetchLocations({province}).then(data => {
+                citySelect.innerHTML = option('', '', '请选择城市') + (data.cities || []).map(item => option(item, selected, '')).join('');
+                citySelect.disabled = false;
+            });
+        }
+
+        function loadDistricts(province, city, selected) {
+            resetDistrict();
+            if (!province || !city) return Promise.resolve();
+            return fetchLocations({province, city}).then(data => {
+                districtSelect.innerHTML = option('', '', '请选择区县') + (data.districts || []).map(item => option(item, selected, '')).join('');
+                districtSelect.disabled = false;
+            });
+        }
+
+        fetchLocations({}).then(data => {
+            provinceSelect.innerHTML = option('', '', '请选择省份') + (data.provinces || []).map(item => option(item, selectedProvince, '')).join('');
+            if (selectedProvince) {
+                loadCities(selectedProvince, selectedCity).then(() => loadDistricts(selectedProvince, selectedCity, selectedDistrict));
+            }
+        });
+
+        provinceSelect.addEventListener('change', function() {
+            loadCities(this.value, '');
+        });
+
+        citySelect.addEventListener('change', function() {
+            loadDistricts(provinceSelect.value, this.value, '');
+        });
+    });
+})();
+</script>

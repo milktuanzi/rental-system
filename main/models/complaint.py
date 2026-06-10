@@ -22,10 +22,21 @@ class Complaint(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     resolved_at = db.Column(db.DateTime, nullable=True)
 
+    @property
+    def target(self):
+        """被投诉用户。"""
+        from main.models.user import User
+        return User.query.get(self.target_id) if self.target_id else None
+
+    @property
+    def property(self):
+        """关联房源。"""
+        from main.models.property import Property
+        return Property.query.get(self.property_id) if self.property_id else None
+
     def is_resolved(self):
         """是否已解决"""
         return self.status == 'resolved'
 
     def __repr__(self):
         return f'<Complaint {self.id}>'
-

@@ -15,7 +15,7 @@
 
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <p><strong>地址:</strong> {{ lease.property.address }}</p>
+                            <p><strong>地址:</strong> {{ lease.property.get_location() }}{{ lease.property.address }}</p>
                             <p><strong>户型:</strong> {{ lease.property.get_room_format() }}</p>
                             <p><strong>面积:</strong> {{ lease.property.area }} m²</p>
                         </div>
@@ -39,7 +39,7 @@
                             <p><strong>租赁结束:</strong> {{ lease.end_date.strftime('%Y-%m-%d') }}</p>
                             <p><strong>状态:</strong>
                                 {% if lease.status == 'active' %}
-                                <span class="badge bg-success">活跃</span>
+                                <span class="badge bg-success">已生效</span>
                                 {% elif lease.status == 'pending' %}
                                 <span class="badge bg-warning">待签署</span>
                                 {% else %}
@@ -59,7 +59,7 @@
                     {% if lease.contract_content %}
                     <hr>
                     <h5>合同内容</h5>
-                    <div class="bg-light p-3" style="max-height: 300px; overflow-y: auto;">
+                    <div class="bg-light p-3" style="max-height: 300px; overflow-y: auto; white-space: pre-wrap;">
                         {{ lease.contract_content }}
                     </div>
                     {% endif %}
@@ -91,6 +91,7 @@
                                         <th>期数</th>
                                         <th>金额</th>
                                         <th>状态</th>
+                                        <th>操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -100,11 +101,22 @@
                                         <td>¥{{ payment.amount }}</td>
                                         <td>
                                             {% if payment.status == 'completed' %}
-                                            <span class="badge bg-success">已支付</span>
+                                            <span class="badge bg-success">已完成</span>
+                                            {% elif payment.status == 'submitted' %}
+                                            <span class="badge bg-info">待房东确认</span>
                                             {% elif payment.status == 'pending' %}
                                             <span class="badge bg-warning">待支付</span>
                                             {% else %}
                                             <span class="badge bg-danger">逾期</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if payment.status in ['pending', 'overdue'] %}
+                                            <a href="{{ url_for('tenant.pay_payment', payment_id=payment.id) }}" class="btn btn-sm btn-primary">去支付</a>
+                                            {% elif payment.tenant_payment_proof %}
+                                            <a href="{{ payment.tenant_payment_proof }}" target="_blank" class="btn btn-sm btn-outline-secondary">凭证</a>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
                                             {% endif %}
                                         </td>
                                     </tr>
@@ -133,4 +145,3 @@
     </div>
 </div>
 {% endblock %}
-

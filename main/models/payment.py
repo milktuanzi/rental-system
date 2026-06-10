@@ -13,11 +13,14 @@ class Payment(db.Model):
     lease_id = db.Column(db.Integer, db.ForeignKey('leases.id'), nullable=False, index=True)
     amount = db.Column(db.Float, nullable=False)
     payment_period = db.Column(db.String(20), nullable=True)  # 例如: '2024-01', '2024-02'
-    status = db.Column(db.String(20), default='pending', index=True)  # 'pending', 'completed', 'overdue'
+    status = db.Column(db.String(20), default='pending', index=True)  # 'pending', 'submitted', 'completed', 'overdue'
     payment_method = db.Column(db.String(50), nullable=True)  # 'online', 'transfer', 'cash'
     transaction_id = db.Column(db.String(255), unique=True, nullable=True)
+    landlord_qr_code = db.Column(db.String(255), nullable=True)
+    tenant_payment_proof = db.Column(db.String(255), nullable=True)
     due_date = db.Column(db.DateTime, nullable=True, index=True)
     payment_date = db.Column(db.DateTime, nullable=True)
+    confirmed_at = db.Column(db.DateTime, nullable=True)
     remark = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -34,4 +37,3 @@ class Payment(db.Model):
 
     def __repr__(self):
         return f'<Payment {self.id}>'
-

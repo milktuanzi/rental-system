@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}账单管理 - 管理后台{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="mb-3">账单管理</h1>
+
+    <div class="mb-3 d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm {{ 'btn-success' if not status else 'btn-outline-success' }}" href="{{ url_for('admin.payments') }}">全部</a>
+        {% for key, label in [('pending', '待支付'), ('submitted', '待房东确认'), ('completed', '已完成'), ('overdue', '已逾期')] %}
+        <a class="btn btn-sm {{ 'btn-success' if status == key else 'btn-outline-success' }}" href="{{ url_for('admin.payments', status=key) }}">{{ label }}</a>
+        {% endfor %}
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>合同</th>
+                        <th>房东</th>
+                        <th>租客</th>
+                        <th>金额</th>
+                        <th>周期</th>
+                        <th>到期日</th>
+                        <th>收款码</th>
+                        <th>支付凭证</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments.items %}
+                    <tr>
+                        <td>#{{ payment.lease_id }} · {{ payment.lease.property.title }}</td>
+                        <td>{{ payment.lease.property.landlord.username }}</td>
+                        <td>{{ payment.lease.tenant.username }}</td>
+                        <td>¥{{ payment.amount|round|int }}</td>
+                        <td>{{ payment.payment_period or '-' }}</td>
+                        <td>{{ payment.due_date.strftime('%Y-%m-%d') if payment.due_date else '-' }}</td>
+                        <td>
+                            {% if payment.landlord_qr_code %}
+                            <a href="{{ payment.landlord_qr_code }}" target="_blank">查看</a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if payment.tenant_payment_proof %}
+                            <a href="{{ payment.tenant_payment_proof }}" target="_blank">查看</a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="post" action="{{ url_for('admin.update_payment_status', payment_id=payment.id) }}">
+                                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    {% for key, label in [('pending', '待支付'), ('submitted', '待房东确认'), ('completed', '已完成'), ('overdue', '已逾期')] %}
+                                    <option value="{{ key }}" {% if payment.status == key %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">暂无账单</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% include 'admin/_pagination.html' with context %}
+</div>
+{% endblock %}

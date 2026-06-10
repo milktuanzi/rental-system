@@ -17,7 +17,8 @@
                             <th>租客</th>
                             <th>租金</th>
                             <th>租赁期限</th>
-                            <th>状态</th>
+                            <th>合同状态</th>
+                            <th>签署时间</th>
                             <th>操作</th>
                         </tr>
                     </thead>
@@ -25,7 +26,7 @@
                         {% for lease in leases.items %}
                         <tr>
                             <td>{{ lease.property.title }}</td>
-                            <td>{{ lease.property.tenant.username }}</td>
+                            <td>{{ lease.tenant.username }}</td>
                             <td>¥{{ lease.monthly_rent }}/月</td>
                             <td>{{ lease.start_date.strftime('%Y-%m-%d') }} 至 {{ lease.end_date.strftime('%Y-%m-%d') }}</td>
                             <td>
@@ -40,7 +41,17 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="#" class="btn btn-sm btn-primary">详情</a>
+                                {% if lease.sign_date %}
+                                {{ lease.sign_date.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                <span class="text-muted">未签署</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('landlord.lease_detail', lease_id=lease.id) }}" class="btn btn-sm btn-primary">详情</a>
+                                {% if lease.status in ['active', 'pending'] %}
+                                <a href="{{ url_for('landlord.create_payment', lease_id=lease.id) }}" class="btn btn-sm btn-outline-success">发起账单</a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

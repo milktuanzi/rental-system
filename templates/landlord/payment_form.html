@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}发起账单 - 房东中心{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-3">发起账单</h1>
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-light border mb-3">合同 #{{ lease.id }} · {{ lease.property.title }} · 租客：{{ lease.tenant.username }}</div>
+            <form method="post" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                <div class="row g-3">
+                    <div class="col-md-4"><label class="form-label">{{ form.amount.label.text }}</label>{{ form.amount(class="form-control") }}{% for error in form.amount.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+                    <div class="col-md-4"><label class="form-label">{{ form.payment_period.label.text }}</label>{{ form.payment_period(class="form-control", placeholder="例如 2026-06") }}{% for error in form.payment_period.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+                    <div class="col-md-4"><label class="form-label">{{ form.due_date.label.text }}</label>{{ form.due_date(class="form-control", type="date") }}{% for error in form.due_date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+                    <div class="col-12"><label class="form-label">{{ form.landlord_qr_code.label.text }}</label>{{ form.landlord_qr_code(class="form-control", accept="image/*") }}{% for error in form.landlord_qr_code.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+                    <div class="col-12"><label class="form-label">{{ form.remark.label.text }}</label>{{ form.remark(class="form-control", rows=3, placeholder="说明租金、水电费或其他费用") }}{% for error in form.remark.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+                </div>
+                <div class="mt-4 d-flex gap-2"><button class="btn btn-success">发起账单</button><a class="btn btn-outline-secondary" href="{{ url_for('landlord.lease_detail', lease_id=lease.id) }}">返回合同</a></div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

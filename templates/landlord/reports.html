@@ -12,7 +12,7 @@
                 </div>
                 <div class="card-body">
                     <!-- 统计卡片 -->
-                    <div class="row mb-6">
+                    <div class="row mb-4">
                         <div class="col-md-3">
                             <div class="card bg-primary text-white">
                                 <div class="card-body text-center">
@@ -46,16 +46,65 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-secondary">
+                                <div class="card-body text-center">
+                                    <div class="h2 mb-1">{{ maintenance_properties }}</div>
+                                    <div class="text-muted">维修中房源</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <div class="h2 mb-1">{{ repair_stats.pending }}</div>
+                                    <div class="text-muted">待处理维修</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <div class="h2 mb-1">{{ repair_stats.in_progress }}</div>
+                                    <div class="text-muted">处理中维修</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <div class="h2 mb-1">{{ repair_stats.completed }}</div>
+                                    <div class="text-muted">已完成维修</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
                     <!-- 月收入统计 -->
-                    <div class="card mb-6">
+                    <div class="card mb-4">
                         <div class="card-header">
-                            <h5 class="text-gray-700">月租金收入</h5>
+                            <h5 class="text-gray-700">租金收入与账单</h5>
                         </div>
                         <div class="card-body">
-                            <div class="text-center py-8">
-                                <div class="text-5xl font-bold text-green-600">¥{{ total_income|round(2) }}</div>
-                                <div class="text-gray-500 mt-2">当前活跃租赁合同月租金总额</div>
+                            <div class="row text-center">
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <div class="display-6 text-success">¥{{ total_income|round(2) }}</div>
+                                    <div class="text-muted">活跃合同月租金</div>
+                                </div>
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <div class="display-6 text-primary">¥{{ paid_income|round(2) }}</div>
+                                    <div class="text-muted">已收账单总额</div>
+                                </div>
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <div class="display-6 text-warning">{{ pending_payments }}</div>
+                                    <div class="text-muted">待支付账单</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="display-6 text-danger">{{ overdue_payments }}</div>
+                                    <div class="text-muted">逾期账单</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -81,7 +130,7 @@
                                     <tbody>
                                         {% for lease in active_leases %}
                                         <tr>
-                                            <td>{{ lease.property.address }}</td>
+                                            <td>{{ lease.property.get_location() }}{{ lease.property.address }}</td>
                                             <td>{{ lease.tenant.username }}</td>
                                             <td>¥{{ lease.monthly_rent }}</td>
                                             <td>{{ lease.start_date.strftime('%Y-%m-%d') }}</td>

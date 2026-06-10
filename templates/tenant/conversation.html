@@ -1,0 +1,497 @@
+{% extends "base.html" %}
+
+{% block body_class %}conversation-lock compact-page{% endblock %}
+
+{% block title %}会话中心 - 租客中心{% endblock %}
+
+{% block extra_css %}
+<style>
+    .conversation-page {
+        height: 100%;
+        overflow: hidden;
+        background: #f3f4f6;
+    }
+
+    .wechat-shell {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: row;
+        background: #f3f4f6;
+        border: 0;
+        border-radius: 0;
+        overflow: hidden;
+        box-shadow: none;
+    }
+
+    .wechat-sidebar {
+        width: 292px;
+        flex: 0 0 292px;
+        display: flex;
+        min-height: 0;
+        flex-direction: column;
+        background: #fff;
+        border-right: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .wechat-sidebar-head {
+        padding: 0.72rem 0.85rem;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        font-size: 0.86rem;
+        font-weight: 850;
+        color: #111827;
+    }
+
+    .wechat-conversation-list {
+        min-height: 0;
+        overflow-y: auto;
+        padding: 0.45rem;
+    }
+
+    .wechat-conversation-item {
+        display: grid;
+        grid-template-columns: 34px 1fr auto;
+        gap: 0.55rem;
+        align-items: center;
+        padding: 0.55rem;
+        border-radius: 12px;
+        color: #111827;
+        text-decoration: none;
+    }
+
+    .wechat-conversation-item:hover,
+    .wechat-conversation-item.active {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .wechat-conversation-copy {
+        min-width: 0;
+    }
+
+    .wechat-conversation-copy strong,
+    .wechat-conversation-copy small {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .wechat-conversation-copy strong {
+        font-size: 0.78rem;
+    }
+
+    .wechat-conversation-copy small {
+        color: #9ca3af;
+        font-size: 0.68rem;
+    }
+
+    .wechat-conversation-meta {
+        text-align: right;
+    }
+
+    .wechat-conversation-meta small {
+        display: block;
+        color: #9ca3af;
+        font-size: 0.64rem;
+    }
+
+    .wechat-conversation-meta b {
+        min-width: 18px;
+        height: 18px;
+        margin-top: 0.2rem;
+        padding: 0 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        color: white;
+        background: #ef4444;
+        font-size: 0.62rem;
+    }
+
+    .wechat-main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        min-height: 0;
+        flex-direction: column;
+    }
+
+    .wechat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.68rem 1rem;
+        background: #fff;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .wechat-title {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .wechat-subtitle {
+        margin-top: 0.15rem;
+        font-size: 0.68rem;
+        color: #6b7280;
+    }
+
+    .wechat-back {
+        color: #374151;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .wechat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.9rem 1rem;
+    }
+
+    .chat-row {
+        display: flex;
+        gap: 0.55rem;
+        margin-bottom: 0.72rem;
+        align-items: flex-start;
+    }
+
+    .chat-row.mine {
+        flex-direction: row-reverse;
+    }
+
+    .chat-avatar {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-size: 0.8rem;
+        font-weight: 800;
+    }
+
+    .chat-row.mine .chat-avatar {
+        background: #bbf7d0;
+        color: #14532d;
+    }
+
+    .chat-main {
+        max-width: min(68%, 620px);
+    }
+
+    .chat-name {
+        margin-bottom: 0.25rem;
+        font-size: 0.68rem;
+        color: #6b7280;
+    }
+
+    .chat-row.mine .chat-name {
+        text-align: right;
+    }
+
+    .chat-bubble {
+        position: relative;
+        display: block;
+        padding: 0.48rem 0.64rem;
+        border-radius: 4px 14px 14px 14px;
+        background: #fff;
+        color: #111827;
+        font-size: 0.8rem;
+        line-height: 1.48;
+        word-break: break-word;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+        text-decoration: none;
+    }
+
+    .chat-content {
+        display: block;
+        white-space: pre-wrap;
+    }
+
+    .chat-row.mine .chat-bubble {
+        border-radius: 14px 4px 14px 14px;
+        background: #95ec69;
+    }
+
+    .chat-bubble.actionable {
+        cursor: pointer;
+        border: 1px solid rgba(34, 197, 94, 0.25);
+    }
+
+    .chat-action {
+        display: inline-flex;
+        margin-top: 0.35rem;
+        padding: 0.16rem 0.45rem;
+        border-radius: 999px;
+        background: rgba(5, 150, 105, 0.12);
+        color: #047857;
+        font-size: 0.68rem;
+        font-weight: 800;
+    }
+
+    .chat-time {
+        margin-top: 0.28rem;
+        font-size: 0.66rem;
+        color: #9ca3af;
+    }
+
+    .chat-row.mine .chat-time {
+        text-align: right;
+    }
+
+    .wechat-empty {
+        padding: 4rem 1rem;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 0.82rem;
+    }
+
+    .wechat-empty-state {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        color: #6b7280;
+        text-align: center;
+    }
+
+    .wechat-empty-state h1 {
+        margin-bottom: 0.45rem;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 850;
+    }
+
+    .wechat-empty-state p {
+        margin: 0;
+        font-size: 0.8rem;
+    }
+
+    .wechat-composer {
+        background: #fff;
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+        padding: 0.6rem 0.75rem;
+    }
+
+    .composer-form {
+        display: flex;
+        align-items: end;
+        gap: 0.65rem;
+    }
+
+    .composer-form textarea {
+        min-height: 38px;
+        max-height: 104px;
+        resize: none;
+        border-radius: 12px;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .composer-send {
+        height: 38px;
+        min-width: 68px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 800;
+    }
+
+    @media (max-width: 768px) {
+        .wechat-sidebar {
+            display: none;
+        }
+
+        .chat-main {
+            max-width: 78%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="conversation-page">
+    <section class="wechat-shell">
+        <aside class="wechat-sidebar">
+            <div class="wechat-sidebar-head">会话</div>
+            <div class="wechat-conversation-list">
+                {% for item in conversations %}
+                <a class="wechat-conversation-item {{ 'active' if other_user and item.user.id == other_user.id else '' }}" href="{{ item.url }}">
+                    <span class="chat-avatar">{{ item.user.username[0].upper() }}</span>
+                    <span class="wechat-conversation-copy">
+                        <strong>{{ item.user.username }}{% if item.user.is_admin() %} · 系统{% endif %}</strong>
+                        <small>{% if item.last_message.sender_id == current_user.id %}我：{% endif %}{{ item.last_message.content[:42] }}{% if item.last_message.content|length > 42 %}...{% endif %}</small>
+                    </span>
+                    <span class="wechat-conversation-meta">
+                        <small>{{ item.last_message.created_at.strftime('%m-%d') }}</small>
+                        {% if item.unread_count > 0 %}<b>{{ item.unread_count }}</b>{% endif %}
+                    </span>
+                </a>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <div class="wechat-main">
+            {% if other_user %}
+            <header class="wechat-header">
+                <div>
+                    <h1 class="wechat-title">{{ other_user.username }}{% if other_user.is_admin() %} · 系统通知{% endif %}</h1>
+                    <div class="wechat-subtitle">
+                        {% if other_user.is_admin() %}
+                        管理员通知以对话形式展示，无需回复
+                        {% else %}
+                        {{ other_user.email }}{% if other_user.phone %} · {{ other_user.phone }}{% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </header>
+
+            <div id="conversationMessages" class="wechat-messages">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="chat-row {{ 'mine' if message.is_mine else '' }}">
+                <div class="chat-avatar">{{ '我' if message.is_mine else message.sender_name[0].upper() }}</div>
+                <div class="chat-main">
+                    <div class="chat-name">{{ '我' if message.is_mine else message.sender_name }}</div>
+                    {% if message.action_url %}
+                    <a class="chat-bubble actionable" href="{{ message.action_url }}"><span class="chat-content">{{ message.content }}</span><span class="chat-action">{{ message.action_label }}</span></a>
+                    {% else %}
+                    <div class="chat-bubble"><span class="chat-content">{{ message.content }}</span></div>
+                    {% endif %}
+                    <div class="chat-time">{{ message.created_at }}</div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="wechat-empty">暂无消息</div>
+            {% endif %}
+            </div>
+
+            {% if other_user.is_admin() %}
+            <div class="wechat-composer text-muted small">系统通知无需回复。</div>
+            {% else %}
+            <div class="wechat-composer">
+                <form id="conversationForm" method="POST" class="composer-form">
+                    {{ form.hidden_tag() }}
+                    {{ form.content(class="form-control", rows=1, placeholder="输入消息，Enter 发送，Shift+Enter 换行") }}
+                <button type="submit" class="btn btn-success composer-send">发送</button>
+            </form>
+            {% for error in form.content.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="wechat-empty-state">
+                <div>
+                    <h1>请选择一个联系人</h1>
+                    <p>左侧是你的消息中心。点击联系人后，这里会显示对应会话。</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+{% if other_user %}
+const messagesUrl = "{{ url_for('tenant.conversation_messages', user_id=other_user.id) }}";
+const form = document.getElementById('conversationForm');
+const textarea = form ? form.querySelector('textarea') : null;
+const messageBox = document.getElementById('conversationMessages');
+
+function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, function(char) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}[char];
+    });
+}
+
+function renderMessages(messages) {
+    if (!messages.length) {
+        messageBox.innerHTML = '<div class="wechat-empty">暂无消息</div>';
+        return;
+    }
+
+    messageBox.innerHTML = messages.map(function(message) {
+        const mine = message.is_mine ? 'mine' : '';
+        const avatar = message.is_mine ? '我' : escapeHtml(message.sender_name.charAt(0).toUpperCase());
+        const name = message.is_mine ? '我' : escapeHtml(message.sender_name);
+        const content = escapeHtml(message.content);
+        const action = message.action_url
+            ? `<a class="chat-bubble actionable" href="${escapeHtml(message.action_url)}"><span class="chat-content">${content}</span><span class="chat-action">${escapeHtml(message.action_label)}</span></a>`
+            : `<div class="chat-bubble"><span class="chat-content">${content}</span></div>`;
+        return `
+            <div class="chat-row ${mine}">
+                <div class="chat-avatar">${avatar}</div>
+                <div class="chat-main">
+                    <div class="chat-name">${name}</div>
+                    ${action}
+                    <div class="chat-time">${escapeHtml(message.created_at)}</div>
+                </div>
+            </div>`;
+    }).join('');
+    messageBox.scrollTop = messageBox.scrollHeight;
+}
+
+function fetchMessages() {
+    fetch(messagesUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) renderMessages(data.messages);
+        });
+}
+
+function submitMessage() {
+    const formData = new FormData(form);
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {'X-Requested-With': 'XMLHttpRequest'}
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                form.reset();
+                textarea.style.height = '38px';
+                renderMessages(data.messages);
+            }
+        });
+}
+
+if (form && textarea) {
+    textarea.addEventListener('input', function() {
+        this.style.height = '38px';
+        this.style.height = Math.min(this.scrollHeight, 104) + 'px';
+    });
+
+    textarea.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            if (textarea.value.trim()) submitMessage();
+        }
+    });
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        if (textarea.value.trim()) submitMessage();
+    });
+}
+
+messageBox.scrollTop = messageBox.scrollHeight;
+setInterval(fetchMessages, 5000);
+{% endif %}
+</script>
+{% endblock %}

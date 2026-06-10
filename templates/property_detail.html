@@ -41,8 +41,8 @@
                         <div class="col-md-6">
                             <h5>房源信息</h5>
                             <ul class="list-unstyled">
-                                <li><strong>地址:</strong> {{ property.address }}</li>
-                                <li><strong>区域:</strong> {{ property.district }}</li>
+                                <li><strong>地址:</strong> {{ property.get_location() }}{{ property.address }}</li>
+                                <li><strong>区域:</strong> {{ property.province }} / {{ property.city }} / {{ property.district }}</li>
                                 <li><strong>户型:</strong> {{ property.get_room_format() }}</li>
                                 <li><strong>面积:</strong> {{ property.area }} m²</li>
                                 <li><strong>楼层:</strong> {{ property.floor }}/{{ property.total_floors }}</li>
@@ -138,10 +138,10 @@
     {% if related_properties %}
     <div class="mt-5">
         <h3>同区域其他房源</h3>
-        <div class="row">
+        <div class="row g-3 compact-property-grid">
             {% for prop in related_properties %}
-            <div class="col-md-6 mb-3">
-                <div class="card">
+            <div class="col-6 col-lg-3">
+                <div class="card property-card h-100">
                     <div class="card-body">
                         <h5 class="card-title">{{ prop.title }}</h5>
                         <p class="card-text">
@@ -157,4 +157,3 @@
     {% endif %}
 </div>
 {% endblock %}
-

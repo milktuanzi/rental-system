@@ -1,0 +1,20 @@
+<div class="row location-selects" data-province="{{ selected_province or request.args.get('province', '') }}" data-city="{{ selected_city or request.args.get('city', '') }}" data-district="{{ selected_district or request.args.get('district', '') }}">
+    <div class="col-md-4 mb-3">
+        <label class="form-label">省/自治区/直辖市</label>
+        <select class="form-select js-province" name="province" {% if location_required|default(true) %}required{% endif %}>
+            <option value="">请选择省份</option>
+        </select>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label">地级市</label>
+        <select class="form-select js-city" name="city" {% if location_required|default(true) %}required{% endif %} disabled>
+            <option value="">请选择城市</option>
+        </select>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label">区/县/县级市</label>
+        <select class="form-select js-district" name="district" {% if location_required|default(true) %}required{% endif %} disabled>
+            <option value="">请选择区县</option>
+        </select>
+    </div>
+</div>

@@ -12,8 +12,10 @@ class Property(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False, index=True)
     description = db.Column(db.Text, nullable=True)
+    province = db.Column(db.String(50), nullable=True, index=True)
+    city = db.Column(db.String(50), nullable=True, index=True)
     address = db.Column(db.String(255), nullable=False, index=True)
-    district = db.Column(db.String(100), nullable=True, index=True)
+    district = db.Column(db.String(100), nullable=True, index=True)  # 区/县/县级市
     area = db.Column(db.Float, nullable=False)  # 面积（平方米）
     rooms = db.Column(db.Integer, nullable=False)  # 房间数
     halls = db.Column(db.Integer, nullable=False, default=1)  # 厅数
@@ -40,10 +42,13 @@ class Property(db.Model):
         """获取户型格式字符串"""
         return f'{self.rooms}室{self.halls}厅{self.bathrooms}卫'
 
+    def get_location(self):
+        """获取省市区展示文本。"""
+        return ''.join([part for part in [self.province, self.city, self.district] if part])
+
     def is_available(self):
         """是否可租"""
         return self.status == 'available'
 
     def __repr__(self):
         return f'<Property {self.title}>'
-
