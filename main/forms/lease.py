@@ -13,11 +13,15 @@ class ChineseDateField(DateField):
     def process_formdata(self, valuelist):
         if valuelist:
             date_str = ' '.join(valuelist)
-            try:
-                self.data = datetime.strptime(date_str, self.format).date()
-            except ValueError as exc:
-                self.data = None
-                raise ValueError('请输入有效的日期，格式为YYYY-MM-DD') from exc
+            formats = self.format if isinstance(self.format, (list, tuple)) else [self.format]
+            for fmt in formats:
+                try:
+                    self.data = datetime.strptime(date_str, fmt).date()
+                    return
+                except ValueError:
+                    continue
+            self.data = None
+            raise ValueError('请输入有效的日期，格式为YYYY-MM-DD')
 
 
 class ChineseDateTimeField(DateTimeField):
@@ -25,11 +29,15 @@ class ChineseDateTimeField(DateTimeField):
     def process_formdata(self, valuelist):
         if valuelist:
             datetime_str = ' '.join(valuelist)
-            try:
-                self.data = datetime.strptime(datetime_str, self.format)
-            except ValueError as exc:
-                self.data = None
-                raise ValueError('请输入有效的日期时间') from exc
+            formats = self.format if isinstance(self.format, (list, tuple)) else [self.format]
+            for fmt in [*formats, '%Y-%m-%d %H:%M', '%Y-%m-%dT%H:%M']:
+                try:
+                    self.data = datetime.strptime(datetime_str, fmt)
+                    return
+                except ValueError:
+                    continue
+            self.data = None
+            raise ValueError('请输入有效的日期时间')
 
 
 class ChineseFloatField(FloatField):

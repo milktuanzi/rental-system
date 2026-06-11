@@ -221,43 +221,114 @@ def get_property_images(property_id):
 @landlord_bp.route('/dashboard')
 @landlord_required
 def dashboard():
-    """房东仪表板"""
-    from datetime import datetime, timedelta
-    
-    # 统计数据
+    """房东仪表板：按经营待办、资产概览、最近动态组织。"""
     total_properties = Property.query.filter_by(landlord_id=current_user.id).count()
-    active_leases = Lease.query.join(Property).filter(
-        Property.landlord_id == current_user.id,
-        Lease.status == 'active'
-    ).count()
-    pending_repairs = Repair.query.join(Property).filter(
-        Property.landlord_id == current_user.id,
-        Repair.status == 'pending'
-    ).count()
-    unread_messages = Message.query.filter_by(
-        receiver_id=current_user.id,
-        is_read=False
-    ).count()
+
+    property_stats = {
+        'available': Property.query.filter_by(landlord_id=current_user.id, status='available').count(),
+        'rented': Property.query.filter_by(landlord_id=current_user.id, status='rented').count(),
+        'maintenance': Property.query.filter_by(landlord_id=current_user.id, status='maintenance').count(),
+    }
+    occupancy_rate = round((property_stats['rented'] / total_properties * 100), 1) if total_properties else 0
+
     pending_appointments = Appointment.query.join(Property).filter(
         Property.landlord_id == current_user.id,
         Appointment.status == 'pending'
+    ).order_by(Appointment.created_at.desc()).limit(5).all()
+
+    confirmed_appointments = Appointment.query.join(Property).filter(
+        Property.landlord_id == current_user.id,
+        Appointment.status == 'confirmed',
+        Property.status == 'available'
+    ).order_by(Appointment.preferred_time.asc()).limit(5).all()
+
+    pending_repairs = Repair.query.join(Property).filter(
+        Property.landlord_id == current_user.id,
+        Repair.status.in_(['pending', 'in_progress'])
+    ).order_by(Repair.created_at.desc()).limit(5).all()
+
+    pending_complaints = Complaint.query.filter(
+        Complaint.target_id == current_user.id,
+        Complaint.status.in_(['pending', 'under_review'])
+    ).order_by(Complaint.created_at.desc()).limit(5).all()
+
+    pending_leases = Lease.query.join(Property).filter(
+        Property.landlord_id == current_user.id,
+        Lease.status == 'pending'
+    ).order_by(Lease.created_at.desc()).limit(5).all()
+
+    submitted_payments = Payment.query.join(Lease).join(Property).filter(
+        Property.landlord_id == current_user.id,
+        Payment.status == 'submitted'
+    ).order_by(Payment.updated_at.desc()).limit(5).all()
+
+    active_leases_count = Lease.query.join(Property).filter(
+        Property.landlord_id == current_user.id,
+        Lease.status == 'active'
     ).count()
 
-    # 最近预约记录（按创建时间降序，取最近5条）
+    lease_ids = [
+        lease_id for (lease_id,) in db.session.query(Lease.id).join(Property).filter(
+            Property.landlord_id == current_user.id
+        ).all()
+    ]
+    month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    completed_income = 0
+    pending_amount = 0
+    if lease_ids:
+        completed_income = db.session.query(db.func.coalesce(db.func.sum(Payment.amount), 0)).filter(
+            Payment.lease_id.in_(lease_ids),
+            Payment.status == 'completed',
+            db.or_(
+                Payment.confirmed_at >= month_start,
+                db.and_(Payment.confirmed_at.is_(None), Payment.payment_date >= month_start)
+            )
+        ).scalar() or 0
+        pending_amount = db.session.query(db.func.coalesce(db.func.sum(Payment.amount), 0)).filter(
+            Payment.lease_id.in_(lease_ids),
+            Payment.status.in_(['pending', 'submitted', 'overdue'])
+        ).scalar() or 0
+
+    recent_properties = Property.query.filter_by(
+        landlord_id=current_user.id
+    ).order_by(Property.created_at.desc()).limit(4).all()
+
     recent_appointments = Appointment.query.join(Property).filter(
         Property.landlord_id == current_user.id
-    ).order_by(Appointment.created_at.desc()).limit(5).all()
+    ).order_by(Appointment.created_at.desc()).limit(4).all()
+
+    unread_messages = Message.query.filter_by(receiver_id=current_user.id, is_read=False).count()
+
+    task_counts = {
+        'appointments': len(pending_appointments),
+        'confirmed_appointments': len(confirmed_appointments),
+        'repairs': len(pending_repairs),
+        'complaints': len(pending_complaints),
+        'leases': len(pending_leases),
+        'payments': len(submitted_payments),
+        'messages': unread_messages,
+        'total': len(pending_appointments) + len(confirmed_appointments) + len(pending_repairs) + len(pending_complaints) + len(pending_leases) + len(submitted_payments) + unread_messages,
+    }
 
     return render_template(
         'landlord/dashboard.html',
         total_properties=total_properties,
-        active_leases=active_leases,
-        pending_repairs=pending_repairs,
-        unread_messages=unread_messages,
+        property_stats=property_stats,
+        occupancy_rate=occupancy_rate,
+        active_leases_count=active_leases_count,
+        completed_income=completed_income,
+        pending_amount=pending_amount,
         pending_appointments=pending_appointments,
+        confirmed_appointments=confirmed_appointments,
+        pending_repairs=pending_repairs,
+        pending_complaints=pending_complaints,
+        pending_leases=pending_leases,
+        submitted_payments=submitted_payments,
+        recent_properties=recent_properties,
         recent_appointments=recent_appointments,
-        datetime=datetime,
-        timedelta=timedelta
+        task_counts=task_counts,
+        unread_messages=unread_messages,
+        now=datetime.utcnow()
     )
 
 
@@ -912,15 +983,17 @@ def confirm_appointment(appointment_id):
     if appointment.landlord_id != current_user.id:
         flash('权限不足', 'danger')
         return redirect(url_for('landlord.appointments'))
+
+    if appointment.status != 'pending':
+        flash('只能确认待处理的预约', 'warning')
+        return redirect(url_for('landlord.appointments'))
     
     appointment.confirm()
-    db.session.commit()
     
-    # 创建确认消息通知租客
     message = Message(
         sender_id=current_user.id,
         receiver_id=appointment.tenant_id,
-        content=f"您的预约已确认！预约时间: {appointment.preferred_time.strftime('%Y-%m-%d %H:%M')}",
+        content=f"您的预约已确认：{appointment.property.title}，预约时间 {appointment.preferred_time.strftime('%Y-%m-%d %H:%M')}。如需签约，请等待房东发起合同。",
         message_type='notification'
     )
     db.session.add(message)
@@ -939,15 +1012,17 @@ def cancel_appointment(appointment_id):
     if appointment.landlord_id != current_user.id:
         flash('权限不足', 'danger')
         return redirect(url_for('landlord.appointments'))
+
+    if appointment.status not in {'pending', 'confirmed'}:
+        flash('当前预约状态不可取消', 'warning')
+        return redirect(url_for('landlord.appointments'))
     
     appointment.cancel()
-    db.session.commit()
     
-    # 创建取消消息通知租客
     message = Message(
         sender_id=current_user.id,
         receiver_id=appointment.tenant_id,
-        content=f"您的预约已取消。预约时间: {appointment.preferred_time.strftime('%Y-%m-%d %H:%M')}",
+        content=f"您的预约已取消：{appointment.property.title}，预约时间 {appointment.preferred_time.strftime('%Y-%m-%d %H:%M')}。",
         message_type='notification'
     )
     db.session.add(message)

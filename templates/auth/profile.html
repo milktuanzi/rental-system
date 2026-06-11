@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}User Profile - Rental System{% endblock %}
+{% block title %}个人资料 - 智能房屋租赁系统{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -105,7 +105,7 @@
 {% block content %}
 <div class="profile-container py-5">
     <div class="profile-header">
-        <div class="profile-avatar">{{ current_user.username[0].upper() if current_user.username else 'U' }}</div>
+        <div class="profile-avatar">{{ current_user.username[0].upper() if current_user.username else '用' }}</div>
         <h2>{{ current_user.username }}</h2>
         <p class="text-muted">{{ current_user.email }}</p>
     </div>
@@ -115,12 +115,12 @@
             <ul class="nav nav-tabs card-header-tabs" id="profileTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">
-                        <i class="fa fa-user me-2"></i>Basic Info
+                        <i class="fa fa-user me-2"></i>基本信息
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="false">
-                        <i class="fa fa-lock me-2"></i>Change Password
+                        <i class="fa fa-lock me-2"></i>修改密码
                     </button>
                 </li>
             </ul>
@@ -128,39 +128,39 @@
         
         <div class="card-body">
             <div class="tab-content" id="profileTabContent">
-                <!-- Basic Info Form -->
+                <!-- 基本信息表单 -->
                 <div class="tab-pane fade show active" id="profile">
                     <form id="profileForm" novalidate>
                         {{ profile_form.hidden_tag() }}
 
-                        <!-- Username -->
+                        <!-- 用户名 -->
                         <div class="form-group mb-4">
                             {{ profile_form.username.label(class="form-label", for="profileUsername") }}
                             {{ profile_form.username(class="form-control", id="profileUsername", placeholder="请输入用户名", autocomplete="username") }}
                             <div class="field-error" id="error-profileUsername"></div>
                         </div>
 
-                        <!-- Email -->
+                        <!-- 邮箱 -->
                         <div class="form-group mb-4">
                             {{ profile_form.email.label(class="form-label", for="profileEmail") }}
                             {{ profile_form.email(class="form-control", id="profileEmail", placeholder="请输入邮箱地址", autocomplete="email") }}
                             <div class="field-error" id="error-profileEmail"></div>
                         </div>
 
-                        <!-- Phone -->
+                        <!-- 手机号 -->
                         <div class="form-group mb-4">
                             {{ profile_form.phone.label(class="form-label", for="profilePhone") }}
                             {{ profile_form.phone(class="form-control", id="profilePhone", placeholder="请输入11位手机号", autocomplete="tel") }}
                             <div class="field-error" id="error-profilePhone"></div>
                         </div>
 
-                        <!-- Bio -->
+                        <!-- 个人简介 -->
                         <div class="form-group mb-4">
                             {{ profile_form.bio.label(class="form-label", for="profileBio") }}
                             {{ profile_form.bio(class="form-control", id="profileBio", placeholder="请输入个人简介（可选）", autocomplete="off") }}
                         </div>
 
-                        <!-- Buttons -->
+                        <!-- 操作按钮 -->
                         <div class="btn-group d-flex">
                             <button type="submit" class="btn btn-success flex-1" id="profileSubmitBtn">
                                 <span class="btn-text"><i class="fa fa-check"></i> 保存修改</span>
@@ -173,19 +173,19 @@
                     </form>
                 </div>
 
-                <!-- Password Change Form -->
+                <!-- 修改密码表单 -->
                 <div class="tab-pane fade" id="password">
                     <form id="passwordForm" novalidate onsubmit="return handlePasswordSubmit(event)">
                         {{ password_form.csrf_token(id='passwordCsrfToken') }}
 
-                        <!-- Current Password -->
+                        <!-- 当前密码 -->
                         <div class="form-group mb-4">
                             {{ password_form.current_password.label(class="form-label", for="currentPassword") }}
                             {{ password_form.current_password(class="form-control", id="currentPassword", placeholder="请输入当前密码", autocomplete="current-password") }}
                             <div class="field-error" id="error-currentPassword"></div>
                         </div>
 
-                        <!-- New Password -->
+                        <!-- 新密码 -->
                         <div class="form-group mb-4">
                             {{ password_form.new_password.label(class="form-label", for="newPassword") }}
                             {{ password_form.new_password(class="form-control", id="newPassword", placeholder="请输入新密码", autocomplete="new-password") }}
@@ -195,17 +195,17 @@
                             <div class="field-error" id="error-newPassword"></div>
                         </div>
 
-                        <!-- Confirm Password -->
+                        <!-- 确认新密码 -->
                         <div class="form-group mb-4">
                             {{ password_form.confirm_password.label(class="form-label", for="confirmPassword") }}
                             {{ password_form.confirm_password(class="form-control", id="confirmPassword", placeholder="请再次输入新密码", autocomplete="new-password") }}
                             <div class="field-error" id="error-confirmPassword"></div>
                         </div>
 
-                        <!-- Buttons -->
+                        <!-- 操作按钮 -->
                         <div class="btn-group d-flex">
                             <button type="submit" class="btn btn-success flex-1" id="passwordSubmitBtn">
-                                <span class="btn-text"><i class="fa fa-check"></i> 确认/span>
+                                <span class="btn-text"><i class="fa fa-check"></i> 确认修改</span>
                                 <span class="loading-spinner"><i class="fa fa-spinner fa-spin"></i> 处理中...</span>
                             </button>
                             <a href="{{ url_for('common.index') }}" class="btn btn-cancel flex-1">
@@ -219,13 +219,13 @@
     </div>
 </div>
 
-<!-- Toast Container -->
+<!-- 提示容器 -->
 <div class="toast-container"></div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Password change form submit handler
+// 修改密码表单提交处理
 function handlePasswordSubmit(event) {
     event.preventDefault();
     
@@ -242,7 +242,7 @@ function handlePasswordSubmit(event) {
     .then(response => response.json())
     .then(result => {
         if (result.success) {
-            showSuccessModal('Password Changed!', 'Your password has been changed successfully. Please login with your new password.');
+            showSuccessModal('密码修改成功', '您的密码已成功修改，请使用新密码重新登录。');
             form.reset();
             submitBtn.disabled = true;
             setTimeout(() => {
@@ -259,7 +259,7 @@ function handlePasswordSubmit(event) {
         }
     })
     .catch(error => {
-        console.error('Request error:', error);
+        console.error('请求错误:', error);
         showToast('网络错误，请稍后重试', 'error');
         submitBtn.disabled = false;
     });
@@ -267,7 +267,7 @@ function handlePasswordSubmit(event) {
     return false;
 }
 
-// Show toast message
+// 显示提示消息
 function showToast(message, type) {
     type = type || 'success';
     const container = document.querySelector('.toast-container');
@@ -292,7 +292,7 @@ function showToast(message, type) {
     }, 5000);
 }
 
-// Show field error
+// 显示字段错误
 function showFieldError(fieldId, errorMessage) {
     const field = document.getElementById(fieldId);
     const errorElement = document.getElementById('error-' + fieldId);
@@ -304,7 +304,7 @@ function showFieldError(fieldId, errorMessage) {
     }
 }
 
-// Clear field error
+// 清除字段错误
 function clearFieldError(fieldId) {
     const field = document.getElementById(fieldId);
     const errorElement = document.getElementById('error-' + fieldId);
@@ -316,7 +316,7 @@ function clearFieldError(fieldId) {
     }
 }
 
-// Clear all field errors
+// 清除所有字段错误
 function clearAllFieldErrors(formId) {
     document.querySelectorAll('#' + formId + ' .field-error').forEach(function(error) {
         error.textContent = '';
@@ -327,7 +327,7 @@ function clearAllFieldErrors(formId) {
     });
 }
 
-// Show success modal
+// 显示成功弹窗
 function showSuccessModal(title, message) {
     const modal = document.createElement('div');
     modal.className = 'modal fade show';
@@ -335,7 +335,7 @@ function showSuccessModal(title, message) {
     modal.setAttribute('tabindex', '-1');
     modal.setAttribute('role', 'dialog');
     modal.style.display = 'block';
-    modal.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fa fa-check-circle me-2"></i>' + title + '</h5></div><div class="modal-body text-center py-4"><div class="mb-3"><i class="fa fa-shield-alt text-success" style="font-size: 3rem;"></i></div><p class="mb-3">' + message + '</p><div class="alert alert-info mb-0"><small><i class="fa fa-info-circle me-1"></i>Page will redirect in <span id="countdown">3</span> seconds</small></div></div><div class="modal-footer justify-content-center"><a href="/auth/logout" class="btn btn-success"><i class="fa fa-sign-out me-1"></i>Logout Now</a><button type="button" class="btn btn-outline-secondary" onclick="closeSuccessModal()">Stay on Page</button></div></div></div>';
+    modal.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fa fa-check-circle me-2"></i>' + title + '</h5></div><div class="modal-body text-center py-4"><div class="mb-3"><i class="fa fa-shield-alt text-success" style="font-size: 3rem;"></i></div><p class="mb-3">' + message + '</p><div class="alert alert-info mb-0"><small><i class="fa fa-info-circle me-1"></i>页面将在 <span id="countdown">3</span> 秒后跳转</small></div></div><div class="modal-footer justify-content-center"><a href="/auth/logout" class="btn btn-success"><i class="fa fa-sign-out me-1"></i>立即退出</a><button type="button" class="btn btn-outline-secondary" onclick="closeSuccessModal()">留在当前页面</button></div></div></div>';
     
     document.body.appendChild(modal);
     
@@ -357,7 +357,7 @@ function showSuccessModal(title, message) {
     }, 1000);
 }
 
-// Close success modal
+// 关闭成功弹窗
 function closeSuccessModal() {
     const modal = document.getElementById('successModal');
     if (modal) {
@@ -370,9 +370,9 @@ function closeSuccessModal() {
     backdrops.forEach(function(backdrop) { backdrop.remove(); });
 }
 
-// Page initialization
+// 页面初始化
 document.addEventListener('DOMContentLoaded', function() {
-    // Profile form submit
+    // 个人信息表单提交
     const profileForm = document.getElementById('profileForm');
     if (profileForm) {
         profileForm.onsubmit = function(event) {
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Request error:', error);
+                console.error('请求错误:', error);
                 showToast('网络错误，请稍后重试', 'error');
             })
             .finally(function() {
@@ -410,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
     
-    // Real-time validation
+    // 实时校验
     document.querySelectorAll('.form-control').forEach(function(input) {
         input.addEventListener('blur', function() {
             const fieldId = this.id;

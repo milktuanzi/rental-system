@@ -66,43 +66,84 @@ def tenant_required(f):
 @tenant_bp.route('/dashboard')
 @tenant_required
 def dashboard():
-    """租客仪表板"""
-    # 统计数据
-    active_leases = Lease.query.filter_by(
+    """租客仪表板：按待办、当前租住、最近动态组织。"""
+    current_lease = Lease.query.filter_by(
         tenant_id=current_user.id,
         status='active'
-    ).count()
-    pending_repairs = Repair.query.filter_by(
+    ).order_by(Lease.end_date.asc()).first()
+
+    pending_leases = Lease.query.filter_by(
         tenant_id=current_user.id,
         status='pending'
-    ).count()
+    ).order_by(Lease.created_at.desc()).limit(3).all()
+
+    due_payments = Payment.query.join(Lease).filter(
+        Lease.tenant_id == current_user.id,
+        Payment.status.in_(['pending', 'overdue'])
+    ).order_by(Payment.due_date.asc(), Payment.created_at.desc()).limit(4).all()
+
+    submitted_payments = Payment.query.join(Lease).filter(
+        Lease.tenant_id == current_user.id,
+        Payment.status == 'submitted'
+    ).order_by(Payment.updated_at.desc()).limit(3).all()
+
+    upcoming_appointments = Appointment.query.filter(
+        Appointment.tenant_id == current_user.id,
+        Appointment.status.in_(['pending', 'confirmed'])
+    ).order_by(Appointment.preferred_time.asc()).limit(4).all()
+
+    active_repairs = Repair.query.filter(
+        Repair.tenant_id == current_user.id,
+        Repair.status.in_(['pending', 'in_progress'])
+    ).order_by(Repair.created_at.desc()).limit(4).all()
+
+    active_complaints = Complaint.query.filter(
+        Complaint.user_id == current_user.id,
+        Complaint.status.in_(['pending', 'under_review'])
+    ).order_by(Complaint.created_at.desc()).limit(4).all()
+
     unread_messages = Message.query.filter_by(
         receiver_id=current_user.id,
         is_read=False
     ).count()
 
-    # 获取最近的租赁
     recent_leases = Lease.query.filter_by(
         tenant_id=current_user.id
-    ).order_by(Lease.created_at.desc()).limit(3).all()
+    ).order_by(Lease.created_at.desc()).limit(4).all()
 
-    # 获取预约统计和最近预约
-    pending_appointments = Appointment.query.filter_by(
-        tenant_id=current_user.id,
-        status='pending'
-    ).count()
     recent_appointments = Appointment.query.filter_by(
-        tenant_id=current_user.id
-    ).order_by(Appointment.created_at.desc()).limit(5).all()
+        tenant_id=current_user.id,
+    ).order_by(Appointment.created_at.desc()).limit(4).all()
+
+    recent_payments = Payment.query.join(Lease).filter(
+        Lease.tenant_id == current_user.id
+    ).order_by(Payment.created_at.desc()).limit(4).all()
+
+    task_counts = {
+        'pending_leases': len(pending_leases),
+        'due_payments': len(due_payments),
+        'appointments': len(upcoming_appointments),
+        'repairs': len(active_repairs),
+        'complaints': len(active_complaints),
+        'messages': unread_messages,
+        'total': len(pending_leases) + len(due_payments) + len(upcoming_appointments) + len(active_repairs) + len(active_complaints) + unread_messages,
+    }
 
     return render_template(
         'tenant/dashboard.html',
-        active_leases=active_leases,
-        pending_repairs=pending_repairs,
-        unread_messages=unread_messages,
+        current_lease=current_lease,
+        pending_leases=pending_leases,
+        due_payments=due_payments,
+        submitted_payments=submitted_payments,
+        upcoming_appointments=upcoming_appointments,
+        active_repairs=active_repairs,
+        active_complaints=active_complaints,
         recent_leases=recent_leases,
-        pending_appointments=pending_appointments,
-        recent_appointments=recent_appointments
+        recent_appointments=recent_appointments,
+        recent_payments=recent_payments,
+        task_counts=task_counts,
+        unread_messages=unread_messages,
+        now=datetime.utcnow()
     )
 
 
@@ -258,20 +299,18 @@ def appointment(property_id):
         return redirect(url_for('common.property_detail', property_id=property_id))
 
     form = AppointmentForm()
-    
-    # 调试日志
-    if request.method == 'POST':
-        print(f"[DEBUG] 收到预约请求，method: {request.method}")
-        print(f"[DEBUG] form data: {request.form}")
-        print(f"[DEBUG] preferred_time field value: {request.form.get('preferred_time', 'NOT FOUND')}")
-        print(f"[DEBUG] form.validate_on_submit(): {form.validate_on_submit()}")
-        if form.errors:
-            print(f"[DEBUG] 表单验证错误: {form.errors}")
-    
+
     if form.validate_on_submit():
         try:
-            print(f"[DEBUG] 开始创建预约记录...")
-            # 创建预约记录
+            existing = Appointment.query.filter(
+                Appointment.property_id == property_id,
+                Appointment.tenant_id == current_user.id,
+                Appointment.status.in_(['pending', 'confirmed'])
+            ).first()
+            if existing:
+                flash('您已对该房源提交过待处理或已确认的预约', 'warning')
+                return redirect(url_for('tenant.my_appointments'))
+
             appointment = Appointment(
                 property_id=property_id,
                 tenant_id=current_user.id,
@@ -281,37 +320,28 @@ def appointment(property_id):
                 status='pending'
             )
             db.session.add(appointment)
-            print(f"[DEBUG] 预约记录已添加到session")
 
-            # 创建消息通知房东
             message = Message(
                 sender_id=current_user.id,
                 receiver_id=property_obj.landlord_id,
-                content=f"预约看房时间: {form.preferred_time.data.strftime('%Y-%m-%d %H:%M')}\n备注: {form.message.data}",
+                content=f"租客发起预约看房：{property_obj.title}，预约时间 {form.preferred_time.data.strftime('%Y-%m-%d %H:%M')}。备注：{form.message.data or '无'}",
                 message_type='inquiry'
             )
             db.session.add(message)
-            print(f"[DEBUG] 消息记录已添加到session")
-            
-            # 提交事务
-            db.session.commit()
-            print(f"[DEBUG] 数据库事务提交成功")
-            
-            # 验证数据是否正确写入
-            check_appointment = Appointment.query.filter_by(id=appointment.id).first()
-            if check_appointment:
-                print(f"[DEBUG] 验证成功: 预约记录已保存到数据库，ID={check_appointment.id}, status={check_appointment.status}")
-            else:
-                print(f"[DEBUG] 验证失败: 预约记录未保存到数据库")
 
+            db.session.commit()
             flash('预约成功！房东将尽快与您联系。', 'success')
-            return redirect(url_for('tenant.dashboard'))
+            return redirect(url_for('tenant.my_appointments'))
             
         except Exception as e:
             db.session.rollback()
-            print(f"[ERROR] 预约创建失败: {str(e)}")
             flash('预约失败，请重试', 'danger')
             return redirect(url_for('tenant.appointment', property_id=property_id))
+
+    if request.method == 'POST':
+        for errors in form.errors.values():
+            for error in errors:
+                flash(error, 'danger')
 
     return render_template('tenant/appointment.html', property=property_obj, form=form)
 

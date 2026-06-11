@@ -551,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 加载可用时段
     function loadAvailableSlots(dateStr) {
         // 获取已预约的时段
-        fetch(`/landlord/api/property/${propertyId}/appointment-slots?date=${dateStr}`)
+        fetch(`/api/property/${propertyId}/appointment-slots?date=${dateStr}`)
             .then(res => res.json())
             .then(data => {
                 const bookedSlots = data.booked_slots || [];

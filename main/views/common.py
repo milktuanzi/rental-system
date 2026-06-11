@@ -3,9 +3,11 @@
 """
 import json
 import os
+from datetime import datetime, timedelta
 
 from flask import Blueprint, render_template, request, jsonify, url_for
 from main import db
+from main.models.appointment import Appointment
 from main.models.property import Property
 from main.models.user import User
 from main.models.news import News
@@ -160,6 +162,30 @@ def property_detail(property_id):
         landlord=landlord,
         related_properties=related_properties
     )
+
+
+@common_bp.route('/api/property/<int:property_id>/appointment-slots')
+def appointment_slots(property_id):
+    """获取指定房源某天已被占用的预约时段。"""
+    Property.query.get_or_404(property_id)
+    date_value = request.args.get('date', '')
+    try:
+        day_start = datetime.strptime(date_value, '%Y-%m-%d')
+    except ValueError:
+        return jsonify({'success': False, 'error': '日期格式无效'}), 400
+
+    day_end = day_start + timedelta(days=1)
+    appointments = Appointment.query.filter(
+        Appointment.property_id == property_id,
+        Appointment.status.in_(['pending', 'confirmed']),
+        Appointment.preferred_time >= day_start,
+        Appointment.preferred_time < day_end
+    ).all()
+
+    return jsonify({
+        'success': True,
+        'booked_slots': [item.preferred_time.strftime('%H:%M') for item in appointments]
+    })
 
 
 @common_bp.route('/news')

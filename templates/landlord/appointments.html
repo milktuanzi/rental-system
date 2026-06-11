@@ -55,6 +55,7 @@
                             <td>{{ appointment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                             <td>{{ appointment.message[:20] }}{% if appointment.message|length > 20 %}...{% endif %}</td>
                             <td>
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#detailModal{{ appointment.id }}">详情</button>
                                 {% if appointment.status == 'pending' %}
                                 <form method="POST" action="{{ url_for('landlord.confirm_appointment', appointment_id=appointment.id) }}" class="d-inline">
                                     <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('确认此预约？')">确认</button>
@@ -62,9 +63,11 @@
                                 <form method="POST" action="{{ url_for('landlord.cancel_appointment', appointment_id=appointment.id) }}" class="d-inline">
                                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('取消此预约？')">取消</button>
                                 </form>
-                                {% else %}
-                                <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#detailModal{{ appointment.id }}">详情</button>
-                                {% if appointment.status == 'confirmed' and appointment.property.status == 'available' %}
+                                {% elif appointment.status == 'confirmed' %}
+                                <form method="POST" action="{{ url_for('landlord.cancel_appointment', appointment_id=appointment.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('取消此预约？')">取消</button>
+                                </form>
+                                {% if appointment.property.status == 'available' %}
                                 <a href="{{ url_for('landlord.create_lease_from_appointment', appointment_id=appointment.id) }}" class="btn btn-sm btn-primary">发起合同</a>
                                 {% endif %}
                                 {% endif %}

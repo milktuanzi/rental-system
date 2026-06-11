@@ -1,178 +1,205 @@
 {% extends "base.html" %}
 
-{% block title %}房东仪表板 - 智能房屋租赁系统{% endblock %}
+{% block title %}房东中心 - 智能房屋租赁系统{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <h1 class="mb-4">房东仪表板</h1>
-
-    <!-- 统计卡片 -->
-    <div class="row mb-5">
-        <div class="col-md-3 mb-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">我的房源</h5>
-                    <p class="display-4">{{ total_properties }}</p>
-                    <a href="{{ url_for('landlord.properties') }}" class="text-white">管理房源 →</a>
-                </div>
-            </div>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div>
+            <p class="text-muted mb-1">房东中心</p>
+            <h1 class="h3 mb-0">经营待办与资产概览</h1>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">活跃租赁</h5>
-                    <p class="display-4">{{ active_leases }}</p>
-                    <a href="{{ url_for('landlord.leases') }}" class="text-white">查看租赁 →</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h5 class="card-title">待处理维修</h5>
-                    <p class="display-4">{{ pending_repairs }}</p>
-                    <a href="{{ url_for('landlord.repairs') }}" class="text-white">查看维修 →</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">消息中心</h5>
-                    <p class="display-4">{{ unread_messages }}</p>
-                    <a href="{{ url_for('landlord.conversation_home') }}" class="text-white">查看会话 →</a>
-                </div>
-            </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('landlord.add_property') }}" class="btn btn-primary btn-sm">发布房源</a>
+            <a href="{{ url_for('landlord.conversation_home') }}" class="btn btn-outline-primary btn-sm">消息中心{% if unread_messages %} {{ unread_messages }}{% endif %}</a>
         </div>
     </div>
 
-    <!-- 最近活动 -->
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">最近租赁</h5>
-                </div>
+    <div class="row g-3 mb-4">
+        {% for title, count, url, tone in [
+            ('待确认预约', task_counts.appointments, url_for('landlord.appointments', status='pending'), 'warning'),
+            ('待确认收款', task_counts.payments, url_for('landlord.payments', status='submitted'), 'danger'),
+            ('维修投诉', task_counts.repairs + task_counts.complaints, url_for('landlord.repairs'), 'info'),
+            ('待签合同', task_counts.leases, url_for('landlord.leases'), 'success')
+        ] %}
+        <div class="col-6 col-xl-3">
+            <a href="{{ url }}" class="card border-0 shadow-sm h-100 text-decoration-none">
                 <div class="card-body">
-                    <p class="text-muted">查看最近的租赁合同活动</p>
-                    <a href="{{ url_for('landlord.leases') }}" class="btn btn-sm btn-outline-primary">查看全部</a>
+                    <div class="text-muted small">{{ title }}</div>
+                    <div class="d-flex align-items-end justify-content-between">
+                        <strong class="display-6 text-{{ tone }}">{{ count }}</strong>
+                        <span class="small text-muted">处理</span>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">待处理事项</h5>
+        {% endfor %}
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">经营待办</h2>
+                    <span class="badge bg-secondary">{{ task_counts.total }}</span>
                 </div>
-                <div class="card-body">
-                    <ul class="list-unstyled">
-                        <li>待处理维修申请: {{ pending_repairs }} 个</li>
-                        <li>待确认预约: {{ pending_appointments }} 个</li>
-                        <li>消息中心未读: {{ unread_messages }} 条</li>
-                    </ul>
-                    {% if pending_appointments > 0 %}
-                    <a href="{{ url_for('landlord.appointments', status='pending') }}" class="btn btn-sm btn-success mt-2">处理预约</a>
+                <div class="list-group list-group-flush">
+                    {% for appointment in pending_appointments %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center gap-3">
+                            <div>
+                                <strong>确认看房预约</strong>
+                                <small class="d-block text-muted">{{ appointment.property.title }} · {{ appointment.tenant.username }} · {{ appointment.preferred_time.strftime('%m-%d %H:%M') }}</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <form method="POST" action="{{ url_for('landlord.confirm_appointment', appointment_id=appointment.id) }}">
+                                    <button class="btn btn-sm btn-success" onclick="return confirm('确认此预约？')">确认</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('landlord.cancel_appointment', appointment_id=appointment.id) }}">
+                                    <button class="btn btn-sm btn-outline-danger" onclick="return confirm('取消此预约？')">取消</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% for payment in submitted_payments %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center gap-3">
+                            <div>
+                                <strong>确认账单收款</strong>
+                                <small class="d-block text-muted">{{ payment.lease.property.title }} · {{ payment.lease.tenant.username }} · {{ payment.payment_period or '本期' }} · ¥{{ payment.amount|round|int }}</small>
+                            </div>
+                            <form method="POST" action="{{ url_for('landlord.confirm_payment', payment_id=payment.id) }}">
+                                <button class="btn btn-sm btn-danger" onclick="return confirm('确认已经收到这笔付款？')">确认收款</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% for appointment in confirmed_appointments %}
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="{{ url_for('landlord.create_lease_from_appointment', appointment_id=appointment.id) }}">
+                        <span><strong>发起租赁合同</strong><small class="d-block text-muted">{{ appointment.property.title }} · {{ appointment.tenant.username }} · 已确认看房</small></span>
+                        <span class="btn btn-sm btn-primary">发起合同</span>
+                    </a>
+                    {% endfor %}
+
+                    {% for lease in pending_leases %}
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="{{ url_for('landlord.lease_detail', lease_id=lease.id) }}">
+                        <span><strong>等待租客签署</strong><small class="d-block text-muted">{{ lease.property.title }} · {{ lease.tenant.username }} · ¥{{ lease.monthly_rent|round|int }}/月</small></span>
+                        <span class="badge bg-warning">待签署</span>
+                    </a>
+                    {% endfor %}
+
+                    {% for repair in pending_repairs %}
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="{{ url_for('landlord.repairs', status=repair.status) }}">
+                        <span><strong>处理维修</strong><small class="d-block text-muted">{{ repair.title }} · {{ repair.property.title }} · {{ repair.tenant.username }}</small></span>
+                        <span class="badge {{ 'bg-warning' if repair.status == 'pending' else 'bg-info' }}">{{ '待处理' if repair.status == 'pending' else '处理中' }}</span>
+                    </a>
+                    {% endfor %}
+
+                    {% for complaint in pending_complaints %}
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="{{ url_for('landlord.complaints', status=complaint.status) }}">
+                        <span><strong>处理投诉</strong><small class="d-block text-muted">{{ complaint.title }} · {{ complaint.complainer.username }}</small></span>
+                        <span class="badge {{ 'bg-warning' if complaint.status == 'pending' else 'bg-info' }}">{{ '待处理' if complaint.status == 'pending' else '处理中' }}</span>
+                    </a>
+                    {% endfor %}
+
+                    {% if unread_messages %}
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="{{ url_for('landlord.conversation_home') }}">
+                        <span><strong>查看未读消息</strong><small class="d-block text-muted">有 {{ unread_messages }} 条消息需要查看</small></span>
+                        <span class="badge bg-primary">{{ unread_messages }}</span>
+                    </a>
+                    {% endif %}
+
+                    {% if task_counts.total == 0 %}
+                    <div class="list-group-item text-center text-muted py-4">当前没有必须处理的经营事项</div>
                     {% endif %}
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- 最近预约 -->
-    {% if recent_appointments %}
-    <div class="row mt-5">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">最近预约 <span class="badge bg-info">{{ recent_appointments|length }}</span></h5>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">最近预约</h2>
+                    <a href="{{ url_for('landlord.appointments') }}" class="small">全部预约</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>房源</th>
+                                <th>租客</th>
+                                <th>看房时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in recent_appointments %}
+                            <tr>
+                                <td>{{ appointment.property.title }}</td>
+                                <td>{{ appointment.tenant.username }}</td>
+                                <td>{{ appointment.preferred_time.strftime('%m-%d %H:%M') }}</td>
+                                <td><span class="badge {{ 'bg-warning' if appointment.status == 'pending' else 'bg-success' if appointment.status == 'confirmed' else 'bg-danger' if appointment.status == 'cancelled' else 'bg-secondary' }}">{{ {'pending': '待确认', 'confirmed': '已确认', 'cancelled': '已取消', 'completed': '已完成'}.get(appointment.status, appointment.status) }}</span></td>
+                                <td><a href="{{ url_for('landlord.appointments') }}" class="btn btn-sm btn-outline-primary">查看</a></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">暂无预约记录</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h2 class="h5 mb-0">资产概览</h2>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>房源</th>
-                                    <th>租客</th>
-                                    <th>预约时间</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for appointment in recent_appointments %}
-                                <tr class="{{ 'table-primary' if appointment.status == 'confirmed' and (datetime.utcnow() - appointment.created_at).total_seconds() < 3600 else '' }}">
-                                    <td>{{ appointment.property.title }}</td>
-                                    <td>{{ appointment.tenant.username }}</td>
-                                    <td>{{ appointment.preferred_time.strftime('%Y-%m-%d %H:%M') }}</td>
-                                    <td>
-                                        {% if appointment.status == 'pending' %}
-                                        <span class="badge bg-warning">待确认</span>
-                                        {% elif appointment.status == 'confirmed' %}
-                                        <span class="badge bg-success">已确认</span>
-                                        {% if (datetime.utcnow() - appointment.created_at).total_seconds() < 3600 %}
-                                        <span class="badge bg-primary ms-1 animate-pulse">NEW</span>
-                                        {% endif %}
-                                        {% elif appointment.status == 'cancelled' %}
-                                        <span class="badge bg-danger">已取消</span>
-                                        {% else %}
-                                        <span class="badge bg-secondary">{{ appointment.status }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if appointment.status == 'pending' %}
-                                        <form method="POST" action="{{ url_for('landlord.confirm_appointment', appointment_id=appointment.id) }}" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('确认此预约？')">确认</button>
-                                        </form>
-                                        <form method="POST" action="{{ url_for('landlord.cancel_appointment', appointment_id=appointment.id) }}" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('取消此预约？')">取消</button>
-                                        </form>
-                                        {% else %}
-                                        <a href="{{ url_for('landlord.appointments') }}" class="btn btn-sm btn-primary">详情</a>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6"><div class="bg-light rounded p-3"><small class="text-muted d-block">总房源</small><strong class="h4">{{ total_properties }}</strong></div></div>
+                        <div class="col-6"><div class="bg-light rounded p-3"><small class="text-muted d-block">入住率</small><strong class="h4">{{ occupancy_rate }}%</strong></div></div>
+                        <div class="col-4"><div class="border rounded p-2 text-center"><small class="text-muted d-block">可租</small><strong>{{ property_stats.available }}</strong></div></div>
+                        <div class="col-4"><div class="border rounded p-2 text-center"><small class="text-muted d-block">已租</small><strong>{{ property_stats.rented }}</strong></div></div>
+                        <div class="col-4"><div class="border rounded p-2 text-center"><small class="text-muted d-block">维修</small><strong>{{ property_stats.maintenance }}</strong></div></div>
                     </div>
-                    <a href="{{ url_for('landlord.appointments') }}" class="btn btn-sm btn-outline-success mt-2">查看全部预约</a>
+                    <div class="d-flex justify-content-between border-top pt-3">
+                        <span class="text-muted">生效合同</span>
+                        <strong>{{ active_leases_count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <span class="text-muted">本月确认收入</span>
+                        <strong>¥{{ completed_income|round|int }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <span class="text-muted">待收金额</span>
+                        <strong>¥{{ pending_amount|round|int }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">最近房源</h2>
+                    <a href="{{ url_for('landlord.properties') }}" class="small">管理房源</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for property in recent_properties %}
+                    <a href="{{ url_for('landlord.edit_property', property_id=property.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between gap-2">
+                            <strong>{{ property.title }}</strong>
+                            <span class="badge {{ 'bg-success' if property.status == 'available' else 'bg-secondary' if property.status == 'rented' else 'bg-warning' }}">{{ {'available': '可租', 'rented': '已租', 'maintenance': '维修中'}.get(property.status, property.status) }}</span>
+                        </div>
+                        <small class="text-muted">{{ property.get_location() }}{{ property.address }} · ¥{{ property.price|round|int }}/月</small>
+                    </a>
+                    {% else %}
+                    <div class="list-group-item text-muted">暂无房源</div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    // 实时更新检查 - 每30秒检查一次新预约
-    setInterval(function() {
-        fetch('{{ url_for('landlord.appointments') }}')
-            .then(response => response.text())
-            .then(html => {
-                // 检查是否有新的已确认预约（带有NEW标记）
-                if (html.includes('badge bg-primary ms-1 animate-pulse">NEW</span>')) {
-                    // 显示通知提示
-                    if (!document.querySelector('.appointment-notification')) {
-                        const notification = document.createElement('div');
-                        notification.className = 'appointment-notification fixed-top alert alert-success alert-dismissible fade show m-3';
-                        notification.innerHTML = `
-                            <i class="fa fa-calendar-check-o"></i> 有新的预约确认！
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        `;
-                        document.body.appendChild(notification);
-                        
-                        // 30秒后自动关闭
-                        setTimeout(() => {
-                            notification.remove();
-                        }, 30000);
-                    }
-                    // 刷新页面显示最新数据
-                    location.reload();
-                }
-            })
-            .catch(error => console.error('检查更新失败:', error));
-    }, 30000); // 每30秒检查一次
-</script>
 {% endblock %}
